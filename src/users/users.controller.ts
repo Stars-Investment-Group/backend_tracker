@@ -1,10 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UsersService } from './users.service';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
+import UsersService from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { Public } from 'src/sig/decorators/public.decorator';
+import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('users')
 @Controller('users')
@@ -13,8 +28,14 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post('login')
+  @Throttle({
+    auth: {
+      ttl: 60000,
+      limit: 10,
+    },
+  })
   @Public()
-  @ApiOperation({summary: 'Connexion Utilisateur'})
+  @ApiOperation({ summary: 'Connexion Utilisateur' })
   @ApiBody({
     schema: {
       example: {
@@ -30,10 +51,16 @@ export class UsersController {
   }
 
   @Post()
+  @Throttle({
+    auth: {
+      ttl: 60000,
+      limit: 10,
+    },
+  })
   @ApiOperation({ summary: 'Créer un utilisateur' })
   @ApiResponse({ status: 201, description: 'Utilisateur créé avec succès.' })
   @ApiResponse({ status: 409, description: 'Email déjà utilisé.' })
-  async create(@Body() createUserDto: CreateUserDto) {
+  async create(@Body() createUserDto: CreateUserDto): Promise<CreateUserDto> {
     return this.usersService.create(createUserDto);
   }
 

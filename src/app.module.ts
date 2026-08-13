@@ -8,9 +8,23 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './sig/guards/auth.guard';
 import { RequestIdMiddleware } from './sig/middlewares/request-id.middleware';
 import { LoggerMiddleware } from './sig/middlewares/logger.middleware';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
-  imports: [DatabaseModule, UsersModule, PortfolioModule],
+  imports: [
+    DatabaseModule,
+    UsersModule,
+    PortfolioModule,
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          name: 'auth',
+          ttl: 60000,
+          limit: 10,
+        },
+      ],
+    }),
+  ],
   controllers: [AppController],
   providers: [
     AppService,
