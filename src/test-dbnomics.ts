@@ -13,13 +13,14 @@ async function bootstrap() {
   const app = await NestFactory.createApplicationContext(TestModule);
   const uemoaService = app.get(UemoaService);
 
+  // Taux de change annuel UEMOA - Dollar US, source BCEAO
   const result = await uemoaService.fetchSeries(
-    'INSEE',
-    'IPC-2015',
-    'A.IPC.SO.00.00.INDICE.ENSEMBLE.FE.SO.BRUT.2015.FALSE',
+    'BCEAO',
+    'TC_A',
+    'ZZZSF3100A0GP',
   );
 
-  console.log(JSON.stringify(result, null, 2));
+  console.log(JSON.stringify(result.series.docs[0], null, 2));
 
   await app.close();
 }
