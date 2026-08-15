@@ -8,9 +8,10 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './sig/guards/auth.guard';
 import { RequestIdMiddleware } from './sig/middlewares/request-id.middleware';
 import { LoggerMiddleware } from './sig/middlewares/logger.middleware';
+import { UemoaModule } from './uemoa/uemoa.module';
 
 @Module({
-  imports: [DatabaseModule, UsersModule, PortfolioModule],
+  imports: [DatabaseModule, UsersModule, PortfolioModule, UemoaModule],
   controllers: [AppController],
   providers: [
     AppService,
