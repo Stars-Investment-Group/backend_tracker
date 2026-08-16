@@ -15,12 +15,34 @@ services:
       - /app/node_modules
 
     depends_on:
+      - postgres
       - redis
 
     command: pnpm start:dev
 
+  postgres:
+    image: postgres:17-alpine
+
+    container_name: nest-postgres
+
+    ports:
+      - "5432:5432"
+
+    env_file:
+      - .env
+
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-sig_db}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    restart: unless-stopped
+
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
 
     container_name: nest-redis
 
@@ -33,4 +55,5 @@ services:
     restart: unless-stopped
 
 volumes:
+  postgres_data:
   redis_data:
