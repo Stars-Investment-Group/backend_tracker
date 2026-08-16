@@ -60,7 +60,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Créer un utilisateur' })
   @ApiResponse({ status: 201, description: 'Utilisateur créé avec succès.' })
   @ApiResponse({ status: 409, description: 'Email déjà utilisé.' })
-  async create(@Body() createUserDto: CreateUserDto): Promise<CreateUserDto> {
+  async create(@Body() createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
