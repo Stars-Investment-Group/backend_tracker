@@ -1,72 +1,108 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { DatabaseService } from 'src/database/database.service';
+import { DatabaseService } from '../database/database.service';
 import { CreatePortfolioDto } from './dto/create-portfolio.dto';
 import { UpdatePortfolioDto } from './dto/update-portfolio.dto';
 
 @Injectable()
 export class PortfolioService {
-
   constructor(private readonly databaseService: DatabaseService) {}
-
 
   async create(createPortfolioDto: CreatePortfolioDto, userId: string) {
     return this.databaseService.portfolio.create({
       data: {
         name: createPortfolioDto.name,
         description: createPortfolioDto.description,
-        currency: createPortfolioDto.currency,
-        userId: userId,
-      }
-    })
+        currency: createPortfolioDto.currency ?? 'USD',
+        userId,
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
   }
 
-  async findAll() {
-    return this.databaseService.portfolio.findMany({});
+  async findAll(userId?: string) {
+    return this.databaseService.portfolio.findMany({
+      where: userId ? { userId } : undefined,
+      include: {
+        transactions: true,
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
   }
 
   async findOne(id: string) {
-    return this.databaseService.portfolio.findUnique({
-      where: {id},
-    })
+    const portfolio = await this.databaseService.portfolio.findUnique({
+      where: { id },
+      include: {
+        transactions: {
+          include: {
+            instrument: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
+
+    if (!portfolio) {
+      throw new NotFoundException(`Portfolio avec l'ID ${id} non trouvé`);
+    }
+
+    return portfolio;
   }
 
   async update(id: string, updatePortfolioDto: UpdatePortfolioDto) {
+    await this.findOne(id);
+
     return this.databaseService.portfolio.update({
-      where: {id},
+      where: { id },
       data: updatePortfolioDto,
-      select: {
-        name: true,
-        description: true,
-        currency: true,
-        isActive: true,
-      }
-    })
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+    });
   }
 
   async remove(id: string) {
-    try {
-      const portfolio = await this.databaseService.portfolio.findUnique({
-        where: { id },
-        
-      });
+    await this.findOne(id);
 
-      if (!portfolio) {
-        throw new NotFoundException(`Produit avec l'ID ${id} non trouvé`);
-      }
+    const deleted = await this.databaseService.portfolio.delete({
+      where: { id },
+    });
 
-
-      const deletedProduct = await this.databaseService.portfolio.delete({
-        where: { id }
-      });
-
-      return {
-        success: true,
-        message: 'Produit supprimé avec succès',
-        product: deletedProduct
-      };
-    } catch (error) {
-      console.error('Erreur lors de la suppression:', error);
-      throw error;
-    }
+    return {
+      success: true,
+      message: 'Portfolio supprimé avec succès',
+      portfolio: deleted,
+    };
   }
 }

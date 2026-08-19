@@ -1,5 +1,6 @@
 import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import * as jwt from 'jsonwebtoken';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
 
 @Injectable()
@@ -12,41 +13,38 @@ export class AuthGuard implements CanActivate {
       context.getHandler(),
       context.getClass(),
     ]);
-    
+
     if (isPublic) {
       return true;
     }
-    
+
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
-    
+
     if (!token) {
       throw new UnauthorizedException('Token manquant. Veuillez vous authentifier.');
     }
-    
+
     try {
-      // 🔧 Décoder le token 
-      const parts = token.split('.');
-      if (parts.length !== 3) {
-        throw new Error('Token invalide');
-      }
-      
-      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
-      console.log('✅ Token décodé:', payload);
-      
+      const secret = process.env.JWT_SECRET || 'secret-fallback-key';
+      const payload = jwt.verify(token, secret) as any;
+
       // Ajouter l'utilisateur à la requête
-      request.user = payload;
+      request.user = {
+        id: payload.sub || payload.id,
+        email: payload.email,
+        role: payload.role,
+      };
       return true;
     } catch (error) {
-      console.error('❌ Erreur token:', error.message);
       throw new UnauthorizedException('Token invalide ou expiré.');
     }
   }
-  
+
   private extractTokenFromHeader(request: any): string | undefined {
     const authHeader = request.headers.authorization;
     if (!authHeader) return undefined;
-    
+
     const [type, token] = authHeader.split(' ');
     return type === 'Bearer' ? token : undefined;
   }
