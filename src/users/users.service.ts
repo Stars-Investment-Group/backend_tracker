@@ -9,7 +9,7 @@ import { LoginUserDto } from './dto/login-user.dto';
 
 
 @Injectable()
-export class UsersService {
+class UsersService {
 
   constructor(private readonly databaseService: DatabaseService) {}
 
@@ -20,13 +20,13 @@ export class UsersService {
     });
   
     if (!user) {
-      throw new UnauthorizedException('Email ou mot de passe incorrect');
+      throw new NotFoundException('Email ou mot de passe incorrect');
     }
   
     // Vérifier le mot de passe
     const isPasswordValid = await bcrypt.compare(loginUserDto.passwordHash, user.passwordHash);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Email ou mot de passe incorrect');
+      throw new NotFoundException('Email ou mot de passe incorrect');
     }
 
     // Mettre à jour la date de dernière connexion
@@ -155,3 +155,5 @@ export class UsersService {
     });
   }
 }
+
+export default UsersService;

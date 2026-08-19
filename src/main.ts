@@ -8,8 +8,10 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3000;
 
   const config = new DocumentBuilder()
-    .setTitle('API Backend Tracker')
-    .setDescription('Documentation officielle de l’API pour gestion des portfeuilles')
+    .setTitle('API Tracker')
+    .setDescription(
+      'Documentation officielle de l’API pour gestion des portfeuilles',
+    )
     .setVersion('1.0')
     .addBearerAuth(
       {
@@ -25,6 +27,5 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
   await app.listen(port);
-
 }
-bootstrap();
+void bootstrap();
