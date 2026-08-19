@@ -1,10 +1,24 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+} from '@nestjs/common';
 import { PortfolioService } from './portfolio.service';
 import { CreatePortfolioDto } from './dto/create-portfolio.dto';
 import { UpdatePortfolioDto } from './dto/update-portfolio.dto';
-import { CurrentUser } from 'src/sig/decorators/current-user.decorator';
-import { ApiOperation, ApiResponse, ApiTags, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
-
+import { CurrentUser } from '../sig/decorators/current-user.decorator';
+import {
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiParam,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
 @ApiTags('portfeuille')
 @ApiBearerAuth('access-token')
@@ -15,31 +29,35 @@ export class PortfolioController {
   @Post()
   @ApiOperation({
     summary: 'Créer un portfeuille',
-    description: 'Ajoute un nouveau portfeuille',
+    description: 'Ajoute un nouveau portfeuille pour un utilisateur',
   })
-  @ApiResponse({status: 201, description: 'portfeuille ajouté avec succès' })
-  @ApiResponse({status: 400, description: 'Données Invalide' })
-  async create(@Body() createPortfolioDto: CreatePortfolioDto, @CurrentUser() user: any) {
-    return this.portfolioService.create(createPortfolioDto, user.id);
+  @ApiResponse({ status: 201, description: 'Portfeuille ajouté avec succès' })
+  @ApiResponse({ status: 400, description: 'Données Invalides' })
+  async create(
+    @Body() createPortfolioDto: CreatePortfolioDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    return this.portfolioService.create(createPortfolioDto, userId);
   }
 
   @Get()
   @ApiOperation({
     summary: 'Lister tous les portfeuilles',
-    description: 'Retourne tous les portfeuilles enregistrés',
+    description: 'Retourne tous les portfeuilles enregistrés (optionnellement filtrés par userId)',
   })
-  @ApiResponse({status: 201, description: 'liste tous les portfeuilles avec succès'})
-  async findAll() {
-    return this.portfolioService.findAll();
+  @ApiResponse({ status: 200, description: 'Liste des portfeuilles retournée avec succès' })
+  async findAll(@Query('userId') userId?: string) {
+    return this.portfolioService.findAll(userId);
   }
 
   @Get(':id')
   @ApiOperation({
-    summary: 'Obtenir des portfeuilles par filtre', 
-    description: 'retourne un ou des portfeuilles par filtre'
+    summary: 'Obtenir un portfeuille par ID',
+    description: 'Retourne un portefeuille avec ses transactions et son propriétaire',
   })
-  @ApiResponse({status: 200, description: 'portfeuille retourne avec succes'})
-  @ApiResponse({status: 404, description: 'filtre impossible'})
+  @ApiParam({ name: 'id', required: true, description: "L'ID du portefeuille" })
+  @ApiResponse({ status: 200, description: 'Portefeuille retourné avec succès' })
+  @ApiResponse({ status: 404, description: 'Portefeuille non trouvé' })
   async findOne(@Param('id') id: string) {
     return this.portfolioService.findOne(id);
   }
@@ -49,11 +67,14 @@ export class PortfolioController {
     summary: 'Mettre à jour un portfeuille',
     description: "Modifie les informations d'un portfeuille existant.",
   })
-  @ApiParam({ name: 'id', required: true, description: "L'ID du portfeuille" })
-  @ApiResponse({ status: 200, description: 'portfeuille mis à jour avec succès.' })
+  @ApiParam({ name: 'id', required: true, description: "L'ID du portefeuille" })
+  @ApiResponse({ status: 200, description: 'Portefeuille mis à jour avec succès.' })
   @ApiResponse({ status: 400, description: 'Données invalides.' })
-  @ApiResponse({ status: 404, description: 'portfeuille non trouvé.' })
-  async update(@Param('id') id: string, @Body() updatePortfolioDto: UpdatePortfolioDto) {
+  @ApiResponse({ status: 404, description: 'Portefeuille non trouvé.' })
+  async update(
+    @Param('id') id: string,
+    @Body() updatePortfolioDto: UpdatePortfolioDto,
+  ) {
     return this.portfolioService.update(id, updatePortfolioDto);
   }
 
@@ -62,9 +83,9 @@ export class PortfolioController {
     summary: 'Supprimer un portfeuille',
     description: 'Supprime un portfeuille.',
   })
-  @ApiParam({ name: 'id', required: true, description: "L'ID du portfeuille" })
-  @ApiResponse({ status: 200, description: 'portfeuille supprimé avec succès.' })
-  @ApiResponse({ status: 404, description: 'portfeuille non trouvé.' })
+  @ApiParam({ name: 'id', required: true, description: "L'ID du portefeuille" })
+  @ApiResponse({ status: 200, description: 'Portefeuille supprimé avec succès.' })
+  @ApiResponse({ status: 404, description: 'Portefeuille non trouvé.' })
   async remove(@Param('id') id: string) {
     return this.portfolioService.remove(id);
   }
