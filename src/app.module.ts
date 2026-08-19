@@ -8,9 +8,12 @@ import { APP_GUARD } from '@nestjs/core';
 import { AuthGuard } from './sig/guards/auth.guard';
 import { RequestIdMiddleware } from './sig/middlewares/request-id.middleware';
 import { LoggerMiddleware } from './sig/middlewares/logger.middleware';
+import { InstrumentModule } from './instrument/instrument.module';
+import { RolesGuard } from './sig/guards/roles.guard';
+import { TransactionModule } from './transaction/transaction.module';
 
 @Module({
-  imports: [DatabaseModule, UsersModule, PortfolioModule],
+  imports: [DatabaseModule, UsersModule, PortfolioModule, InstrumentModule, TransactionModule],
   controllers: [AppController],
   providers: [
     AppService,
@@ -18,6 +21,10 @@ import { LoggerMiddleware } from './sig/middlewares/logger.middleware';
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
     }
   ],
 })

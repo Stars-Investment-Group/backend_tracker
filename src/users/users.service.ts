@@ -28,16 +28,24 @@ export class UsersService {
     if (!isPasswordValid) {
       throw new UnauthorizedException('Email ou mot de passe incorrect');
     }
+
+    // Mettre à jour la date de dernière connexion
+    const updatedUser = await this.databaseService.user.update({
+      where: { id: user.id },
+      data: {
+        lastLogin: new Date(),
+      },
+    });
   
     // Générer le token
     const token = jwt.sign(
-      { id: user.id, email: user.email },
+      { id: updatedUser.id, email: updatedUser.email,role: updatedUser.role },
       process.env.JWT_SECRET || 'votre-secret-key',
       { expiresIn: '24h' }
     );
   
     // Retourner sans le mot de passe
-    const { passwordHash, ...userWithoutPassword } = user;
+    const { passwordHash, ...userWithoutPassword } = updatedUser;
   
     return {
       success: true,
@@ -65,6 +73,7 @@ export class UsersService {
         passwordHash: hashedPassword,
         firstName: createUserDto.firstName,
         lastName: createUserDto.lastName,
+        company: createUserDto.company,
         theme: createUserDto.theme,
       },
     });
@@ -76,6 +85,8 @@ export class UsersService {
         email: true,
         firstName: true,
         lastName: true,
+        role: true,
+        company: true,
         preferences: true,
         theme: true,
       }
@@ -116,6 +127,8 @@ export class UsersService {
         email: true,
         firstName: true,
         lastName: true,
+        role: true,
+        company: true,
         preferences: true,
         theme: true,
         updatedAt: true,
@@ -133,6 +146,7 @@ export class UsersService {
         email: true,
         firstName: true,
         lastName: true,
+        company: true,
         preferences: true,
         theme: true,
         createdAt: true,
