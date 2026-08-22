@@ -10,19 +10,67 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum RoleUser {
+  USER
+  ADMIN
+  ANALYSTE
+}
+
+enum AssetClass {
+  equity
+  bond
+  crypto
+  fx
+  commodity
+
+  @@map("asset_class_enum")
+}
+
+enum TransactionType {
+  buy
+  sell
+  dividend
+
+  @@map("transaction_type_enum")
+}
+
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique
   passwordHash String   @map("password_hash")
   firstName    String?  @map("first_name")
   lastName     String?  @map("last_name")
+  company      String?    @db.VarChar(255)
+  role RoleUser @default(USER)
+  isActive Boolean @default(true)
   preferences  Json?    @default("{}")
   theme        String   @default("dark")
+  lastLogin    DateTime?  @map("last_login") @db.Timestamptz(6)
+  refreshTokenHash String?  @map("refresh_token_hash") @db.VarChar(255)
   portfolios Portfolio[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  auditLogs  AuditLog[]
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt  @db.Timestamptz(6)
+}
 
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  action     String   @db.VarChar(100)
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   String?  @map("entity_id") @db.Uuid
+  oldValues  Json?    @map("old_values")
+  newValues  Json?    @map("new_values")
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId], name: "idx_audit_logs_user_id")
+  @@index([createdAt(sort: Desc)], name: "idx_audit_logs_created_at")
+  @@index([entityType, entityId], name: "idx_audit_logs_entity")
+  @@map("audit_logs")
 }
 
 model Portfolio {
@@ -32,24 +80,68 @@ model Portfolio {
   description String?
   currency    String   @default("USD")
   isActive    Boolean  @default(true) 
-
+  transactions Transaction[]
   createdAt DateTime @default(now()) 
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
 }
+
 model EconomicIndicator {
   id          String   @id @default(uuid()) @db.Uuid
-  provider    String   // ex: "BCEAO"
-  dataset     String   // ex: "TC_A", "PIBN"
+  provider    String
+  dataset     String
   seriesCode  String   @map("series_code")
   seriesName  String   @map("series_name")
-  country     String?  // ex: "SN" pour Sénégal, null si régional
-  period      String   // ex: "2024"
+  country     String?
+  period      String
   value       Float
   fetchedAt   DateTime @default(now()) @map("fetched_at")
 
   @@unique([provider, dataset, seriesCode, period])
   @@map("economic_indicators")
+}
+
+model Instrument {
+  id         String  @id @default(uuid()) @db.Uuid
+  ticker     String? @db.VarChar(50)
+  name       String  @db.VarChar(255)
+  assetClass  AssetClass @map("asset_class")
+  sector     String? @db.VarChar(100)
+  industry   String? @db.VarChar(100)
+  exchange   String? @db.VarChar(50)
+  country    String? @db.VarChar(3)
+  currency   String  @default("USD") @db.VarChar(3)
+  isin       String? @db.VarChar(12)
+  cusip      String? @db.VarChar(9)
+  sedol      String? @db.VarChar(7)
+  metadata   Json?   @default("{}")
+  transactions Transaction[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt 
+
+  @@index([ticker], name: "idx_instruments_ticker")
+  @@index([assetClass], name: "idx_instruments_asset_class")
+  @@index([country], name: "idx_instruments_country")
+}
+
+model Transaction {
+  id              String          @id @default(uuid()) @db.Uuid
+  portfolioId     String          @map("portfolio_id") @db.Uuid
+  instrumentId    String          @map("instrument_id") @db.Uuid
+  transactionType TransactionType @map("transaction_type")
+  quantity        Decimal         @db.Decimal(20, 8)
+  price           Decimal         @db.Decimal(20, 8)
+  fees            Decimal         @default(0) @db.Decimal(20, 8)
+  transactionDate DateTime        @map("transaction_date") @db.Date
+  notes           String?
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  portfolio  Portfolio  @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  instrument Instrument @relation(fields: [instrumentId], references: [id])
+
+  @@index([portfolioId], name: "idx_transactions_portfolio_id")
+  @@index([instrumentId], name: "idx_transactions_instrument_id")
+  @@index([transactionDate(sort: Desc)], name: "idx_transactions_transaction_date")
+  @@map("transactions")
 }
