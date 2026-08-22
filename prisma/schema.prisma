@@ -39,3 +39,17 @@ model Portfolio {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
 }
+model EconomicIndicator {
+  id          String   @id @default(uuid()) @db.Uuid
+  provider    String   // ex: "BCEAO"
+  dataset     String   // ex: "TC_A", "PIBN"
+  seriesCode  String   @map("series_code")
+  seriesName  String   @map("series_name")
+  country     String?  // ex: "SN" pour Sénégal, null si régional
+  period      String   // ex: "2024"
+  value       Float
+  fetchedAt   DateTime @default(now()) @map("fetched_at")
+
+  @@unique([provider, dataset, seriesCode, period])
+  @@map("economic_indicators")
+}
