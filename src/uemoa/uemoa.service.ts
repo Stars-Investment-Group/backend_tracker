@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { DatabaseService } from '../database/database.service';
 
 const DBNOMICS_BASE_URL = 'https://api.db.nomics.world/v22';
@@ -14,6 +15,18 @@ export interface TransformedIndicator {
   period: string;
   value: number;
 }
+
+interface SeriesConfig {
+  provider: string;
+  dataset: string;
+  seriesCode: string;
+  country: string | null;
+}
+
+const SERIES_TO_SYNC: SeriesConfig[] = [
+  { provider: 'BCEAO', dataset: 'TC_A', seriesCode: 'ZZZSF3100A0GP', country: null },
+  { provider: 'BCEAO', dataset: 'PIBN', seriesCode: 'KKKSR1015A0BP', country: 'SN' },
+];
 
 @Injectable()
 export class UemoaService {
@@ -96,5 +109,39 @@ export class UemoaService {
     const raw = await this.fetchSeries(provider, dataset, seriesCode);
     const rows = this.transformSeries(raw, country);
     return this.saveIndicators(rows);
+  }
+
+  /**
+   * Synchronise toutes les séries configurées (SERIES_TO_SYNC).
+   */
+  async syncAll(): Promise<void> {
+    this.logger.log(`Démarrage de la synchronisation de ${SERIES_TO_SYNC.length} série(s)...`);
+
+    for (const config of SERIES_TO_SYNC) {
+      try {
+        const count = await this.syncSeries(
+          config.provider,
+          config.dataset,
+          config.seriesCode,
+          config.country,
+        );
+        this.logger.log(`✓ ${config.provider}/${config.dataset}/${config.seriesCode} : ${count} lignes`);
+      } catch (error) {
+        this.logger.error(
+          `✗ Échec pour ${config.provider}/${config.dataset}/${config.seriesCode} : ${error.message}`,
+        );
+      }
+    }
+
+    this.logger.log('Synchronisation terminée.');
+  }
+
+  /**
+   * Tâche planifiée : s'exécute automatiquement chaque jour à 6h00 du matin.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_6AM)
+  async handleDailySync() {
+    this.logger.log('--- Lancement du sync quotidien UEMOA (cron) ---');
+    await this.syncAll();
   }
 }
