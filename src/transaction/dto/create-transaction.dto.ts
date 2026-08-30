@@ -10,6 +10,7 @@ import {
   } from 'class-validator';
   
   import { TransactionType } from '@prisma/client';
+import { ApiProperty } from '@nestjs/swagger';
   
   export class CreateTransactionDto {
     @IsUUID()
@@ -17,8 +18,12 @@ import {
   
     @IsUUID()
     instrumentId: string;
-  
-    @IsEnum(TransactionType)
+
+    @ApiProperty({description: 'Type de Transactions', enum: TransactionType})
+    @IsEnum(TransactionType, {
+        message: ({ value }) =>
+        `Le type '${value}' est invalide. Valeurs autorisées: ${Object.values(TransactionType).join(', ')}`,
+    })
     transactionType: TransactionType;
   
     @IsNumber()

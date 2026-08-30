@@ -34,6 +34,9 @@ export class CreateUserDto {
     @IsNotEmpty({ message: 'company requis' })
     company: string;
 
+    @IsOptional()
+    preferences?: Record<string, any>;
+
     @IsString()
     @IsNotEmpty({ message: 'theme requis' })
     theme: string;

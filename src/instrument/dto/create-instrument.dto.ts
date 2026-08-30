@@ -20,8 +20,11 @@ import { ApiProperty } from '@nestjs/swagger';
     @MaxLength(255)
     name: string;
   
-    @ApiProperty({description: 'disponibilité du produit', enum: AssetClass})
-    @IsEnum(AssetClass)
+    @ApiProperty({description: 'Type Asset', enum: AssetClass})
+    @IsEnum(AssetClass, {
+      message: ({ value }) =>
+      `Asset '${value}' est invalide. Valeurs autorisées: ${Object.values(AssetClass).join(', ')}`,
+    })
     assetClass: AssetClass;
   
     @IsOptional()

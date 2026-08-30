@@ -57,6 +57,7 @@ export class UsersController {
       limit: 10,
     },
   })
+  @Public()
   @ApiOperation({ summary: 'Créer un utilisateur' })
   @ApiResponse({ status: 201, description: 'Utilisateur créé avec succès.' })
   @ApiResponse({ status: 409, description: 'Email déjà utilisé.' })

@@ -74,6 +74,8 @@ class UsersService {
         firstName: createUserDto.firstName,
         lastName: createUserDto.lastName,
         company: createUserDto.company,
+        role: createUserDto.role,
+        preferences: createUserDto.preferences ?? {},
         theme: createUserDto.theme,
       },
     });
