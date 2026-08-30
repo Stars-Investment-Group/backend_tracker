@@ -3,6 +3,7 @@ import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { DatabaseService } from '../database/database.service';
+import { FindIndicatorsDto } from './dto/find-indicators.dto';
 
 const DBNOMICS_BASE_URL = 'https://api.db.nomics.world/v22';
 
@@ -37,12 +38,16 @@ export class UemoaService {
     private readonly db: DatabaseService,
   ) {}
 
+  // ---------- EXTRACT ----------
+
   async fetchSeries(provider: string, dataset: string, seriesCode: string) {
     const url = `${DBNOMICS_BASE_URL}/series/${provider}/${dataset}/${seriesCode}?observations=1`;
     this.logger.log(`Appel DBnomics : ${url}`);
     const response = await firstValueFrom(this.httpService.get(url));
     return response.data;
   }
+
+  // ---------- TRANSFORM ----------
 
   transformSeries(
     rawResponse: any,
@@ -64,6 +69,8 @@ export class UemoaService {
       value: value[index],
     }));
   }
+
+  // ---------- LOAD ----------
 
   async saveIndicators(rows: TransformedIndicator[]): Promise<number> {
     let savedCount = 0;
@@ -100,6 +107,8 @@ export class UemoaService {
     return savedCount;
   }
 
+  // ---------- PIPELINE ----------
+
   async syncSeries(
     provider: string,
     dataset: string,
@@ -125,16 +134,57 @@ export class UemoaService {
           config.seriesCode,
           config.country,
         );
-        this.logger.log(`✓ ${config.provider}/${config.dataset}/${config.seriesCode} : ${count} lignes`);
+        this.logger.log(`OK ${config.provider}/${config.dataset}/${config.seriesCode} : ${count} lignes`);
       } catch (error) {
         this.logger.error(
-          `✗ Échec pour ${config.provider}/${config.dataset}/${config.seriesCode} : ${error.message}`,
+          `ECHEC ${config.provider}/${config.dataset}/${config.seriesCode} : ${error.message}`,
         );
       }
     }
 
     this.logger.log('Synchronisation terminée.');
   }
+
+  // ---------- LECTURE (API) ----------
+
+  /**
+   * Récupère les indicateurs, avec filtres optionnels.
+   * Triés par série puis par période croissante (ordre chronologique).
+   */
+  async findIndicators(filters: FindIndicatorsDto) {
+    const where: any = {};
+    if (filters.country) where.country = filters.country;
+    if (filters.dataset) where.dataset = filters.dataset;
+    if (filters.provider) where.provider = filters.provider;
+    if (filters.seriesCode) where.seriesCode = filters.seriesCode;
+
+    return this.db.economicIndicator.findMany({
+      where,
+      orderBy: [{ seriesCode: 'asc' }, { period: 'asc' }],
+    });
+  }
+
+  /**
+   * Liste les séries distinctes présentes en base, avec leur date de dernière
+   * récupération. Utile pour alimenter un sélecteur côté frontend.
+   */
+  async listAvailableSeries() {
+    const rows = await this.db.economicIndicator.findMany({
+      distinct: ['provider', 'dataset', 'seriesCode'],
+      select: {
+        provider: true,
+        dataset: true,
+        seriesCode: true,
+        seriesName: true,
+        country: true,
+        fetchedAt: true,
+      },
+      orderBy: { seriesCode: 'asc' },
+    });
+    return rows;
+  }
+
+  // ---------- ORDONNANCEMENT ----------
 
   /**
    * Tâche planifiée : s'exécute automatiquement chaque jour à 6h00 du matin.
