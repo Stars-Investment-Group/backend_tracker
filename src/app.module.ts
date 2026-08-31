@@ -14,6 +14,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './sig/guards/roles.guard';
 import { RequestIdMiddleware } from './sig/middlewares/request-id.middleware';
 import { LoggerMiddleware } from './sig/middlewares/logger.middleware';
+import { UemoaModule } from './uemoa/uemoa.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { LoggerMiddleware } from './sig/middlewares/logger.middleware';
     PortfolioModule,
     InstrumentModule,
     TransactionModule,
+    UemoaModule,
     ThrottlerModule.forRoot({
       throttlers: [
         {
