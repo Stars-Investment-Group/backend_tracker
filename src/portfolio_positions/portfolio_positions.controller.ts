@@ -1,10 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Param, ParseUUIDPipe } from '@nestjs/common';
 import { PortfolioPositionsService } from './portfolio_positions.service';
-import { CreatePortfolioPositionDto } from './dto/create-portfolio_position.dto';
-import { UpdatePortfolioPositionDto } from './dto/update-portfolio_position.dto';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Roles } from 'src/sig/decorators/roles.decorator';
-
+import { CurrentUser } from '../sig/decorators/current-user.decorator';
 
 @ApiTags('portfolio-positions')
 @ApiBearerAuth('access-token')
@@ -12,33 +9,29 @@ import { Roles } from 'src/sig/decorators/roles.decorator';
 export class PortfolioPositionsController {
   constructor(private readonly portfolioPositionsService: PortfolioPositionsService) {}
 
-
-
   @Get()
   @ApiOperation({
-    summary: 'Lister tous les portfolio-positions',
-    description: 'Retourne tous les portfolio-positions enregistrés',
+    summary: 'Lister les positions',
+    description: "Retourne les positions de l'utilisateur connecté (ou toutes pour Admin/Analystes)",
   })
-  @ApiResponse({status: 201, description: 'liste tous les portfolio-positions avec succès'})
-  findAll() {
-    return this.portfolioPositionsService.findAll();
+  @ApiResponse({ status: 200, description: 'Positions retournées avec succès' })
+  findAll(@CurrentUser() user: any) {
+    return this.portfolioPositionsService.findAll(user);
   }
 
   @Get('portfolio/:portfolioId')
   @ApiOperation({
-    summary: 'Obtenir un portfolio-positions par ID',
-    description: 'Retourne un portfolio-positions spécifique en fonction de son ID.',
+    summary: 'Obtenir les positions d’un portefeuille par ID',
+    description: 'Retourne les positions consolidées d’un portefeuille spécifique.',
   })
-  @ApiParam({ name: 'id', required: true, description: "L'ID du portfolio-positions" })
-  @ApiResponse({ status: 200, description: 'portfolio-positions trouvé.' })
-  @ApiResponse({ status: 404, description: 'portfolio-positions non trouvé.' })
+  @ApiParam({ name: 'portfolioId', required: true, description: "L'UUID du portefeuille" })
+  @ApiResponse({ status: 200, description: 'Positions trouvées.' })
+  @ApiResponse({ status: 403, description: 'Accès refusé.' })
+  @ApiResponse({ status: 404, description: 'Portefeuille non trouvé.' })
   findByPortfolio(
     @Param('portfolioId', ParseUUIDPipe) portfolioId: string,
+    @CurrentUser() user: any,
   ) {
-    return this.portfolioPositionsService.findByPortfolio(
-      portfolioId,
-    );
+    return this.portfolioPositionsService.findByPortfolio(portfolioId, user);
   }
-
-
 }

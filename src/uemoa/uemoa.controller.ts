@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { RoleUser } from '@prisma/client';
 import { Public } from '../sig/decorators/public.decorator';
+import { Roles } from '../sig/decorators/roles.decorator';
 import { UemoaService } from './uemoa.service';
 import { FindIndicatorsDto } from './dto/find-indicators.dto';
 
@@ -86,14 +88,17 @@ export class UemoaController {
   }
 
   @Post('sync')
+  @Roles(RoleUser.ADMIN)
+  @ApiBearerAuth('access-token')
   @ApiOperation({
-    summary: 'Déclencher manuellement la synchronisation',
+    summary: 'Déclencher manuellement la synchronisation (Admin uniquement)',
     description:
       "Lance immédiatement le pipeline ETL (extraction DBnomics, transformation, écriture en " +
       "base) sans attendre l'exécution planifiée de 6h. L'opération est idempotente : elle met " +
       "à jour les valeurs existantes au lieu de créer des doublons.",
   })
   @ApiResponse({ status: 201, description: 'Synchronisation terminée.' })
+  @ApiResponse({ status: 403, description: 'Accès refusé - Rôle Admin requis.' })
   async triggerSync() {
     await this.uemoaService.syncAll();
     return { message: 'Synchronisation UEMOA terminée.' };
