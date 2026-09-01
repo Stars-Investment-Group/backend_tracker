@@ -46,11 +46,31 @@ model User {
   preferences  Json?    @default("{}")
   theme        String   @default("dark")
   lastLogin    DateTime?  @map("last_login") @db.Timestamptz(6)
+  refreshTokenHash String?  @map("refresh_token_hash") @db.VarChar(255)
   portfolios Portfolio[]
+  auditLogs  AuditLog[]
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt  @db.Timestamptz(6)
+}
 
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String?  @map("user_id") @db.Uuid
+  action     String   @db.VarChar(100)
+  entityType String   @map("entity_type") @db.VarChar(50)
+  entityId   String?  @map("entity_id") @db.Uuid
+  oldValues  Json?    @map("old_values")
+  newValues  Json?    @map("new_values")
+  ipAddress  String?  @map("ip_address") @db.VarChar(45)
+  userAgent  String?  @map("user_agent") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
 
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId], name: "idx_audit_logs_user_id")
+  @@index([createdAt(sort: Desc)], name: "idx_audit_logs_created_at")
+  @@index([entityType, entityId], name: "idx_audit_logs_entity")
+  @@map("audit_logs")
 }
 
 model Portfolio {
@@ -65,7 +85,21 @@ model Portfolio {
   updatedAt DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
 
+model EconomicIndicator {
+  id          String   @id @default(uuid()) @db.Uuid
+  provider    String
+  dataset     String
+  seriesCode  String   @map("series_code")
+  seriesName  String   @map("series_name")
+  country     String?
+  period      String
+  value       Float
+  fetchedAt   DateTime @default(now()) @map("fetched_at")
+
+  @@unique([provider, dataset, seriesCode, period])
+  @@map("economic_indicators")
 }
 
 model Instrument {
@@ -83,15 +117,12 @@ model Instrument {
   sedol      String? @db.VarChar(7)
   metadata   Json?   @default("{}")
   transactions Transaction[]
-
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt 
 
   @@index([ticker], name: "idx_instruments_ticker")
   @@index([assetClass], name: "idx_instruments_asset_class")
   @@index([country], name: "idx_instruments_country")
-
 }
 
 model Transaction {
