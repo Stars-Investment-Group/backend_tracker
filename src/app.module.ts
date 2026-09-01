@@ -15,6 +15,7 @@ import { RolesGuard } from './sig/guards/roles.guard';
 import { RequestIdMiddleware } from './sig/middlewares/request-id.middleware';
 import { LoggerMiddleware } from './sig/middlewares/logger.middleware';
 import { UemoaModule } from './uemoa/uemoa.module';
+import { PortfolioPositionsModule } from './portfolio_positions/portfolio_positions.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { UemoaModule } from './uemoa/uemoa.module';
     PortfolioModule,
     InstrumentModule,
     TransactionModule,
+    PortfolioPositionsModule,
     UemoaModule,
     ThrottlerModule.forRoot({
       throttlers: [

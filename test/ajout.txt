@@ -1,3 +1,19 @@
+user
+{
+  "email": "test@exemple.com",
+  "passwordHash": "123456",
+  "firstName": "Test",
+  "lastName": "test",
+  "company": "Rym Holding",
+  "role": "ADMIN",
+  "preferences": {
+    "source": "test source",
+    "description": "test description"
+  },
+  "theme": "Dark"
+}
+
+
 portfeuille
 {
   "name": "Mon Portfolio Test",
