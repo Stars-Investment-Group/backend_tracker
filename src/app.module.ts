@@ -16,6 +16,7 @@ import { RequestIdMiddleware } from './sig/middlewares/request-id.middleware';
 import { LoggerMiddleware } from './sig/middlewares/logger.middleware';
 import { UemoaModule } from './uemoa/uemoa.module';
 import { PortfolioPositionsModule } from './portfolio_positions/portfolio_positions.module';
+import { PriceHistoryModule } from './price_history/price_history.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PortfolioPositionsModule } from './portfolio_positions/portfolio_positi
     InstrumentModule,
     TransactionModule,
     PortfolioPositionsModule,
+    PriceHistoryModule,
     UemoaModule,
     ThrottlerModule.forRoot({
       throttlers: [
