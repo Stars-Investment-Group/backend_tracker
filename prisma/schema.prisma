@@ -117,6 +117,7 @@ model Instrument {
   sedol      String? @db.VarChar(7)
   metadata   Json?   @default("{}")
   transactions Transaction[]
+  priceHistories PriceHistory[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt 
 
@@ -144,4 +145,24 @@ model Transaction {
   @@index([instrumentId], name: "idx_transactions_instrument_id")
   @@index([transactionDate(sort: Desc)], name: "idx_transactions_transaction_date")
   @@map("transactions")
+}
+
+model PriceHistory {
+  id           String     @id @default(uuid()) @db.Uuid
+  instrumentId String     @map("instrument_id") @db.Uuid
+  timestamp    DateTime   @db.Timestamptz(6)
+  open         Decimal?   @db.Decimal(20, 8)
+  high         Decimal?   @db.Decimal(20, 8)
+  low          Decimal?   @db.Decimal(20, 8)
+  close        Decimal    @db.Decimal(20, 8)
+  volume       Decimal?   @db.Decimal(20, 2)
+  isAdjusted   Boolean    @default(false) @map("is_adjusted")
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  instrument   Instrument @relation(fields: [instrumentId], references: [id], onDelete: Cascade)
+
+  @@unique([instrumentId, timestamp])
+  @@index([instrumentId, timestamp(sort: Desc)], name: "idx_price_history_instrument_timestamp")
+  @@index([timestamp(sort: Desc)], name: "idx_price_history_timestamp")
+  @@map("price_history")
 }
