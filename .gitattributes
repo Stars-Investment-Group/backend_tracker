@@ -1,0 +1,9 @@
+# Auto detect text files and perform LF normalization
+* text=auto eol=lf
+
+# Force LF on Prisma and SQL files to ensure checksum consistency across OS (Windows, Mac, Linux)
+*.sql text eol=lf
+*.prisma text eol=lf
+*.ts text eol=lf
+*.json text eol=lf
+*.md text eol=lf
