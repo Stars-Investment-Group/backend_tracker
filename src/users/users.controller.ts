@@ -7,10 +7,10 @@ import {
   Param,
   Delete,
   Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiBody,
   ApiOperation,
   ApiResponse,
   ApiTags,
@@ -20,12 +20,9 @@ import { RoleUser } from '@prisma/client';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { LoginUserDto } from './dto/login-user.dto';
 import { UpdateRoleDto } from '../auth/dto/update-role.dto';
-import { Public } from '../sig/decorators/public.decorator';
 import { Roles } from '../sig/decorators/roles.decorator';
 import { CurrentUser } from '../sig/decorators/current-user.decorator';
-import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('users')
 @Controller('users')
@@ -33,39 +30,11 @@ import { Throttle } from '@nestjs/throttler';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
-  @Post('login')
-  @Throttle({
-    auth: {
-      ttl: 60000,
-      limit: 10,
-    },
-  })
-  @Public()
-  @ApiOperation({ summary: 'Connexion Utilisateur (Direct Users Endpoint)' })
-  @ApiBody({
-    schema: {
-      example: {
-        email: 'madiorfall@example.com',
-        passwordHash: '654321',
-      },
-    },
-  })
-  @ApiResponse({ status: 200, description: 'Connexion réussie' })
-  @ApiResponse({ status: 401, description: 'Email ou mot de passe incorrect' })
-  async login(@Body() loginUserDto: LoginUserDto, @Req() req: Request) {
-    return this.usersService.login(loginUserDto, req.ip, req.get('user-agent'));
-  }
-
   @Post()
-  @Throttle({
-    auth: {
-      ttl: 60000,
-      limit: 10,
-    },
-  })
-  @Public()
-  @ApiOperation({ summary: 'Créer un utilisateur' })
+  @Roles(RoleUser.ADMIN)
+  @ApiOperation({ summary: 'Créer un utilisateur (Admin uniquement)' })
   @ApiResponse({ status: 201, description: 'Utilisateur créé avec succès.' })
+  @ApiResponse({ status: 403, description: 'Accès interdit - Rôle Admin requis.' })
   @ApiResponse({ status: 409, description: 'Email déjà utilisé.' })
   async create(
     @Body() createUserDto: CreateUserDto,
@@ -86,21 +55,33 @@ export class UsersController {
   @Get(':id')
   @ApiOperation({ summary: 'Obtenir un utilisateur par ID' })
   @ApiResponse({ status: 200, description: 'Utilisateur trouvé.' })
+  @ApiResponse({ status: 403, description: 'Accès refusé.' })
   @ApiResponse({ status: 404, description: 'Utilisateur non trouvé.' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string, @CurrentUser() currentUser: any) {
+    if (
+      currentUser.id !== id &&
+      currentUser.role !== RoleUser.ADMIN &&
+      currentUser.role !== RoleUser.ANALYSTE
+    ) {
+      throw new ForbiddenException('Accès refusé. Vous ne pouvez consulter que votre propre profil.');
+    }
     return this.usersService.findOne(id);
   }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Mettre à jour un utilisateur' })
   @ApiResponse({ status: 200, description: 'Utilisateur mis à jour.' })
+  @ApiResponse({ status: 403, description: 'Accès refusé.' })
   async update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-    @CurrentUser('id') actorId: string,
+    @CurrentUser() currentUser: any,
     @Req() req: Request,
   ) {
-    return this.usersService.update(id, updateUserDto, actorId, req.ip, req.get('user-agent'));
+    if (currentUser.id !== id && currentUser.role !== RoleUser.ADMIN) {
+      throw new ForbiddenException('Accès refusé. Vous ne pouvez modifier que votre propre profil.');
+    }
+    return this.usersService.update(id, updateUserDto, currentUser.id, req.ip, req.get('user-agent'));
   }
 
   @Patch(':id/role')

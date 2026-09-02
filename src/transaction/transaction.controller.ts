@@ -12,7 +12,7 @@ import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { Roles } from '../sig/decorators/roles.decorator';
+import { CurrentUser } from '../sig/decorators/current-user.decorator';
 
 @ApiTags('Transaction')
 @ApiBearerAuth('access-token')
@@ -26,20 +26,27 @@ export class TransactionController {
     description: 'Ajoute une nouvelle transaction dans un portfolio',
   })
   @ApiResponse({ status: 201, description: 'Transaction ajoutée avec succès' })
-  @ApiResponse({ status: 400, description: 'Données Invalides' })
+  @ApiResponse({ status: 400, description: 'Données Invalides ou solde insuffisant' })
+  @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Portfolio ou Instrument introuvable' })
-  create(@Body() createTransactionDto: CreateTransactionDto) {
-    return this.transactionService.create(createTransactionDto);
+  create(
+    @Body() createTransactionDto: CreateTransactionDto,
+    @CurrentUser() user: any,
+  ) {
+    return this.transactionService.create(createTransactionDto, user);
   }
 
   @Get()
   @ApiOperation({
-    summary: 'Lister toutes les transactions',
-    description: 'Retourne toutes les transactions enregistrées avec filtre optionnel par portfolio',
+    summary: 'Lister les transactions',
+    description: "Retourne les transactions de l'utilisateur avec filtre optionnel par portfolio",
   })
   @ApiResponse({ status: 200, description: 'Liste de transactions retournée avec succès' })
-  findAll(@Query('portfolioId') portfolioId?: string) {
-    return this.transactionService.findAll(portfolioId);
+  findAll(
+    @CurrentUser() user: any,
+    @Query('portfolioId') portfolioId?: string,
+  ) {
+    return this.transactionService.findAll(user, portfolioId);
   }
 
   @Get(':id')
@@ -49,9 +56,10 @@ export class TransactionController {
   })
   @ApiParam({ name: 'id', required: true, description: "L'ID de la transaction" })
   @ApiResponse({ status: 200, description: 'Transaction retournée avec succès' })
+  @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Transaction introuvable' })
-  findOne(@Param('id') id: string) {
-    return this.transactionService.findOne(id);
+  findOne(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.transactionService.findOne(id, user);
   }
 
   @Patch(':id')
@@ -62,12 +70,14 @@ export class TransactionController {
   @ApiParam({ name: 'id', required: true, description: "L'ID de la transaction" })
   @ApiResponse({ status: 200, description: 'Transaction mise à jour avec succès' })
   @ApiResponse({ status: 400, description: 'Données invalides' })
+  @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Transaction non trouvée' })
   update(
     @Param('id') id: string,
     @Body() updateTransactionDto: UpdateTransactionDto,
+    @CurrentUser() user: any,
   ) {
-    return this.transactionService.update(id, updateTransactionDto);
+    return this.transactionService.update(id, updateTransactionDto, user);
   }
 
   @Delete(':id')
@@ -77,8 +87,9 @@ export class TransactionController {
   })
   @ApiParam({ name: 'id', required: true, description: "L'ID de la transaction" })
   @ApiResponse({ status: 200, description: 'Transaction supprimée avec succès' })
+  @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Transaction non trouvée' })
-  remove(@Param('id') id: string) {
-    return this.transactionService.remove(id);
+  remove(@Param('id') id: string, @CurrentUser() user: any) {
+    return this.transactionService.remove(id, user);
   }
 }

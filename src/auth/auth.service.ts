@@ -125,7 +125,20 @@ export class AuthService {
   /**
    * Renouvellement des tokens (Refresh Token Rotation)
    */
-  async refreshTokens(userId: string, refreshToken: string, ipAddress?: string, userAgent?: string) {
+  async refreshTokens(refreshToken: string, ipAddress?: string, userAgent?: string) {
+    let payload: JwtPayload;
+    const secret = process.env.JWT_SECRET || 'secret-fallback-key';
+    const refreshSecret = process.env.JWT_REFRESH_SECRET || secret + '-refresh';
+
+    try {
+      payload = await this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
+        secret: refreshSecret,
+      });
+    } catch {
+      throw new ForbiddenException('Token de rafraîchissement invalide ou expiré.');
+    }
+
+    const userId = payload.sub;
     const user = await this.databaseService.user.findUnique({
       where: { id: userId },
     });

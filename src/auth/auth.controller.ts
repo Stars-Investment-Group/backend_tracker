@@ -58,11 +58,9 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Nouveaux tokens générés' })
   @ApiResponse({ status: 403, description: 'Refresh token invalide ou révoqué' })
   async refresh(@Body() dto: RefreshTokenDto, @Req() req: Request) {
-    const payload = (this.authService as any).jwtService.decode(dto.refreshToken) as any;
-    const userId = payload?.sub;
     const ipAddress = req.ip;
     const userAgent = req.get('user-agent');
-    return this.authService.refreshTokens(userId, dto.refreshToken, ipAddress, userAgent);
+    return this.authService.refreshTokens(dto.refreshToken, ipAddress, userAgent);
   }
 
   @Post('logout')

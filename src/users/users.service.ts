@@ -2,16 +2,13 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { AuditService } from '../audit/audit.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { LoginUserDto } from './dto/login-user.dto';
 import { RoleUser } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class UsersService {
@@ -19,56 +16,6 @@ export class UsersService {
     private readonly databaseService: DatabaseService,
     private readonly auditService: AuditService,
   ) {}
-
-  async login(loginUserDto: LoginUserDto, ipAddress?: string, userAgent?: string) {
-    const user = await this.databaseService.user.findUnique({
-      where: { email: loginUserDto.email.toLowerCase() },
-    });
-
-    if (!user) {
-      throw new NotFoundException('Email ou mot de passe incorrect');
-    }
-
-    if (!user.isActive) {
-      throw new UnauthorizedException('Compte utilisateur désactivé');
-    }
-
-    const isPasswordValid = await bcrypt.compare(loginUserDto.passwordHash, user.passwordHash);
-    if (!isPasswordValid) {
-      throw new NotFoundException('Email ou mot de passe incorrect');
-    }
-
-    const updatedUser = await this.databaseService.user.update({
-      where: { id: user.id },
-      data: {
-        lastLogin: new Date(),
-      },
-    });
-
-    const token = jwt.sign(
-      { sub: updatedUser.id, id: updatedUser.id, email: updatedUser.email, role: updatedUser.role },
-      process.env.JWT_SECRET || 'secret-fallback-key',
-      { expiresIn: '24h' },
-    );
-
-    await this.auditService.log({
-      userId: user.id,
-      action: 'USER_LOGIN',
-      entityType: 'User',
-      entityId: user.id,
-      ipAddress,
-      userAgent,
-    });
-
-    const { passwordHash, refreshTokenHash, ...userWithoutPassword } = updatedUser;
-
-    return {
-      success: true,
-      message: 'Connexion réussie',
-      user: userWithoutPassword,
-      token,
-    };
-  }
 
   async create(createUserDto: CreateUserDto, actorId?: string, ipAddress?: string, userAgent?: string) {
     const existingUser = await this.databaseService.user.findUnique({
