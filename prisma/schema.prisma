@@ -34,6 +34,15 @@ enum TransactionType {
   @@map("transaction_type_enum")
 }
 
+enum AlertType {
+  price
+  news
+  economic
+  earnings
+
+  @@map("alert_type_enum")
+}
+
 model User {
   id           String   @id @default(uuid()) @db.Uuid
   email        String   @unique
@@ -49,6 +58,8 @@ model User {
   refreshTokenHash String?  @map("refresh_token_hash") @db.VarChar(255)
   portfolios Portfolio[]
   auditLogs  AuditLog[]
+  alerts     Alert[]
+  watchlists Watchlist[]
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt  @db.Timestamptz(6)
 }
@@ -118,6 +129,8 @@ model Instrument {
   metadata   Json?   @default("{}")
   transactions Transaction[]
   priceHistories PriceHistory[]
+  alerts       Alert[]
+  watchlistInstruments WatchlistInstrument[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt 
 
@@ -165,4 +178,60 @@ model PriceHistory {
   @@index([instrumentId, timestamp(sort: Desc)], name: "idx_price_history_instrument_timestamp")
   @@index([timestamp(sort: Desc)], name: "idx_price_history_timestamp")
   @@map("price_history")
+}
+
+model Alert {
+  id           String    @id @default(uuid()) @db.Uuid
+
+  userId       String    @map("user_id") @db.Uuid
+  instrumentId String?   @map("instrument_id") @db.Uuid
+
+  alertType    AlertType    @map("alert_type")
+  condition    Json?     @default("{}")
+
+  isActive     Boolean   @default(true) @map("is_active")
+  triggeredAt  DateTime? @map("triggered_at") @db.Timestamptz(6)
+
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  instrument Instrument? @relation(fields: [instrumentId], references: [id])
+
+  @@index([userId])
+  @@index([instrumentId])
+  @@map("alerts")
+}
+
+model Watchlist {
+  id        String   @id @default(uuid()) @db.Uuid
+
+  userId    String   @map("user_id") @db.Uuid
+  name      String   @db.VarChar(100)
+
+  isActive  Boolean  @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user User @relation(fields: [userId], references: [id],onDelete: Cascade)
+
+  instruments WatchlistInstrument[]
+
+  @@index([userId])
+  @@map("watchlists")
+}
+
+model WatchlistInstrument {
+  watchlistId  String @map("watchlist_id") @db.Uuid
+  instrumentId String @map("instrument_id") @db.Uuid
+
+  watchlist Watchlist @relation(fields: [watchlistId],references: [id],onDelete: Cascade )
+
+  instrument Instrument @relation(fields: [instrumentId],references: [id])
+
+  @@id([watchlistId, instrumentId])
+  @@index([instrumentId])
+  @@map("watchlist_instruments")
 }

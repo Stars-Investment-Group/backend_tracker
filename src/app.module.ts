@@ -17,6 +17,8 @@ import { LoggerMiddleware } from './sig/middlewares/logger.middleware';
 import { UemoaModule } from './uemoa/uemoa.module';
 import { PortfolioPositionsModule } from './portfolio_positions/portfolio_positions.module';
 import { PriceHistoryModule } from './price_history/price_history.module';
+import { AlertsModule } from './alerts/alerts.module';
+import { WatchlistsModule } from './watchlists/watchlists.module';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { PriceHistoryModule } from './price_history/price_history.module';
         },
       ],
     }),
+    AlertsModule,
+    WatchlistsModule,
   ],
   controllers: [AppController],
   providers: [

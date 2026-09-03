@@ -15,7 +15,7 @@ export class PortfolioPositionsController {
     description: "Retourne les positions de l'utilisateur connecté (ou toutes pour Admin/Analystes)",
   })
   @ApiResponse({ status: 200, description: 'Positions retournées avec succès' })
-  findAll(@CurrentUser() user: any) {
+  findAll(@CurrentUser('id') user: any) {
     return this.portfolioPositionsService.findAll(user);
   }
 
@@ -30,7 +30,7 @@ export class PortfolioPositionsController {
   @ApiResponse({ status: 404, description: 'Portefeuille non trouvé.' })
   findByPortfolio(
     @Param('portfolioId', ParseUUIDPipe) portfolioId: string,
-    @CurrentUser() user: any,
+    @CurrentUser('id') user: any,
   ) {
     return this.portfolioPositionsService.findByPortfolio(portfolioId, user);
   }
