@@ -118,6 +118,7 @@ model Instrument {
   metadata   Json?   @default("{}")
   transactions Transaction[]
   priceHistories PriceHistory[]
+  newsInstruments NewsInstrument[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt 
 
@@ -166,3 +167,79 @@ model PriceHistory {
   @@index([timestamp(sort: Desc)], name: "idx_price_history_timestamp")
   @@map("price_history")
 }
+
+// ==========================================
+// NEWS & ECONOMIC EVENTS MODULE
+// ==========================================
+
+enum NewsSentiment {
+  positive
+  neutral
+  negative
+
+  @@map("news_sentiment_enum")
+}
+
+enum EventImpact {
+  low
+  medium
+  high
+
+  @@map("event_impact_enum")
+}
+
+model NewsArticle {
+  id          String         @id @default(uuid()) @db.Uuid
+  title       String         @db.VarChar(255)
+  content     String         @db.Text
+  summary     String?        @db.Text
+  sentiment   NewsSentiment? @default(neutral)
+  source      String?        @db.VarChar(100)
+  url         String?        @db.VarChar(500)
+  assetClass  AssetClass?    @map("asset_class")
+  isBreaking  Boolean        @default(false) @map("is_breaking")
+  readCount   Int            @default(0) @map("read_count")
+  publishedAt DateTime       @default(now()) @map("published_at") @db.Timestamptz(6)
+  createdAt   DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  instruments NewsInstrument[]
+
+  @@index([publishedAt(sort: Desc)], name: "idx_news_articles_published_at")
+  @@index([isBreaking], name: "idx_news_articles_is_breaking")
+  @@index([readCount(sort: Desc)], name: "idx_news_articles_read_count")
+  @@index([assetClass], name: "idx_news_articles_asset_class")
+  @@map("news_articles")
+}
+
+model NewsInstrument {
+  newsId       String      @map("news_id") @db.Uuid
+  instrumentId String      @map("instrument_id") @db.Uuid
+
+  newsArticle  NewsArticle @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  instrument   Instrument  @relation(fields: [instrumentId], references: [id], onDelete: Cascade)
+
+  @@id([newsId, instrumentId])
+  @@index([instrumentId], name: "idx_news_instruments_instrument_id")
+  @@map("news_instruments")
+}
+
+model EconomicEvent {
+  id          String      @id @default(uuid()) @db.Uuid
+  title       String      @db.VarChar(255)
+  country     String      @db.VarChar(3)
+  eventDate   DateTime    @map("event_date") @db.Timestamptz(6)
+  impact      EventImpact @default(medium)
+  actual      String?     @db.VarChar(50)
+  forecast    String?     @db.VarChar(50)
+  previous    String?     @db.VarChar(50)
+  unit        String?     @db.VarChar(20)
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([eventDate(sort: Asc)], name: "idx_economic_events_event_date")
+  @@index([country], name: "idx_economic_events_country")
+  @@index([impact], name: "idx_economic_events_impact")
+  @@map("economic_events")
+}
+

@@ -17,6 +17,7 @@ import { LoggerMiddleware } from './sig/middlewares/logger.middleware';
 import { UemoaModule } from './uemoa/uemoa.module';
 import { PortfolioPositionsModule } from './portfolio_positions/portfolio_positions.module';
 import { PriceHistoryModule } from './price_history/price_history.module';
+import { NewsModule } from './news/news.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PriceHistoryModule } from './price_history/price_history.module';
     PortfolioPositionsModule,
     PriceHistoryModule,
     UemoaModule,
+    NewsModule,
     ThrottlerModule.forRoot({
       throttlers: [
         {
