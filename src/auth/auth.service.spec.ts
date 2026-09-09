@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { DatabaseService } from '../database/database.service';
 import { JwtService } from '@nestjs/jwt';
 import { AuditService } from '../audit/audit.service';
+import { ConfigService } from '@nestjs/config';
 import { RoleUser } from '@prisma/client';
 import { ConflictException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
@@ -24,10 +25,19 @@ describe('AuthService', () => {
 
   const mockJwtService = {
     signAsync: jest.fn().mockResolvedValue('mock-token'),
+    verifyAsync: jest.fn(),
   };
 
   const mockAuditService = {
     log: jest.fn().mockResolvedValue(null),
+  };
+
+  const mockConfigService = {
+    get: jest.fn((key: string) => {
+      if (key === 'JWT_SECRET') return 'test-secret';
+      if (key === 'JWT_REFRESH_SECRET') return 'test-refresh-secret';
+      return null;
+    }),
   };
 
   beforeEach(async () => {
@@ -46,6 +56,10 @@ describe('AuthService', () => {
           provide: AuditService,
           useValue: mockAuditService,
         },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
+        },
       ],
     }).compile();
 
@@ -61,32 +75,35 @@ describe('AuthService', () => {
   });
 
   describe('register', () => {
-    it('devrait créer un utilisateur et retourner des tokens', async () => {
+    it('should register a new user successfully', async () => {
       mockDatabaseService.user.findUnique.mockResolvedValue(null);
       mockDatabaseService.user.create.mockResolvedValue({
-        id: 'user-uuid',
+        id: '123',
         email: 'test@example.com',
         role: RoleUser.USER,
-        passwordHash: 'hashed',
+        firstName: 'John',
+        lastName: 'Doe',
+        passwordHash: 'hash',
         refreshTokenHash: null,
       });
-      mockDatabaseService.user.update.mockResolvedValue({});
 
       const result = await service.register({
         email: 'test@example.com',
         password: 'Password123!',
-        firstName: 'Test',
-        lastName: 'User',
+        firstName: 'John',
+        lastName: 'Doe',
       });
 
       expect(result.success).toBe(true);
       expect(result.accessToken).toBe('mock-token');
       expect(result.refreshToken).toBe('mock-token');
-      expect(mockDatabaseService.user.create).toHaveBeenCalled();
+      expect(mockAuditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'USER_REGISTER' }),
+      );
     });
 
-    it('devrait lever ConflictException si email existe déjà', async () => {
-      mockDatabaseService.user.findUnique.mockResolvedValue({ id: 'existing' });
+    it('should throw ConflictException if email already exists', async () => {
+      mockDatabaseService.user.findUnique.mockResolvedValue({ id: '123' });
 
       await expect(
         service.register({
@@ -98,12 +115,12 @@ describe('AuthService', () => {
   });
 
   describe('login', () => {
-    it('devrait authentifier avec succès un utilisateur valide', async () => {
-      const hashedPassword = await bcrypt.hash('Password123!', 10);
+    it('should login an active user with correct credentials', async () => {
+      const hashed = await bcrypt.hash('Password123!', 10);
       mockDatabaseService.user.findUnique.mockResolvedValue({
-        id: 'user-uuid',
+        id: '123',
         email: 'test@example.com',
-        passwordHash: hashedPassword,
+        passwordHash: hashed,
         role: RoleUser.USER,
         isActive: true,
       });
@@ -116,15 +133,17 @@ describe('AuthService', () => {
 
       expect(result.success).toBe(true);
       expect(result.accessToken).toBe('mock-token');
+      expect(mockAuditService.log).toHaveBeenCalledWith(
+        expect.objectContaining({ action: 'USER_LOGIN' }),
+      );
     });
 
-    it('devrait rejeter si mot de passe incorrect', async () => {
-      const hashedPassword = await bcrypt.hash('OtherPassword', 10);
+    it('should throw UnauthorizedException if password does not match', async () => {
+      const hashed = await bcrypt.hash('OtherPassword!', 10);
       mockDatabaseService.user.findUnique.mockResolvedValue({
-        id: 'user-uuid',
+        id: '123',
         email: 'test@example.com',
-        passwordHash: hashedPassword,
-        role: RoleUser.USER,
+        passwordHash: hashed,
         isActive: true,
       });
 

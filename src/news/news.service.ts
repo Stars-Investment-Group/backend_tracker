@@ -257,46 +257,48 @@ export class NewsService {
 
     const { instrumentIds, ...articleData } = updateNewsArticleDto;
 
-    // Si une liste d'instruments est fournie, valider et réassocier
-    if (instrumentIds !== undefined) {
-      if (instrumentIds.length > 0) {
-        const existingInstruments = await this.databaseService.instrument.findMany({
-          where: { id: { in: instrumentIds } },
-          select: { id: true },
+    return this.databaseService.$transaction(async (tx) => {
+      // Si une liste d'instruments est fournie, valider et réassocier
+      if (instrumentIds !== undefined) {
+        if (instrumentIds.length > 0) {
+          const existingInstruments = await tx.instrument.findMany({
+            where: { id: { in: instrumentIds } },
+            select: { id: true },
+          });
+
+          if (existingInstruments.length !== instrumentIds.length) {
+            throw new BadRequestException(
+              'Un ou plusieurs identifiants d\'instruments sont invalides.',
+            );
+          }
+        }
+
+        // Supprimer les anciennes associations et recréer les nouvelles
+        await tx.newsInstrument.deleteMany({
+          where: { newsId: id },
         });
 
-        if (existingInstruments.length !== instrumentIds.length) {
-          throw new BadRequestException(
-            'Un ou plusieurs identifiants d\'instruments sont invalides.',
-          );
+        if (instrumentIds.length > 0) {
+          await tx.newsInstrument.createMany({
+            data: instrumentIds.map((instrumentId) => ({
+              newsId: id,
+              instrumentId,
+            })),
+          });
         }
       }
 
-      // Supprimer les anciennes associations et recréer les nouvelles
-      await this.databaseService.newsInstrument.deleteMany({
-        where: { newsId: id },
-      });
-
-      if (instrumentIds.length > 0) {
-        await this.databaseService.newsInstrument.createMany({
-          data: instrumentIds.map((instrumentId) => ({
-            newsId: id,
-            instrumentId,
-          })),
-        });
-      }
-    }
-
-    return this.databaseService.newsArticle.update({
-      where: { id },
-      data: articleData,
-      include: {
-        instruments: {
-          include: {
-            instrument: true,
+      return tx.newsArticle.update({
+        where: { id },
+        data: articleData,
+        include: {
+          instruments: {
+            include: {
+              instrument: true,
+            },
           },
         },
-      },
+      });
     });
   }
 

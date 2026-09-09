@@ -40,6 +40,9 @@ describe('NewsService', () => {
       findMany: jest.fn(),
       count: jest.fn(),
     },
+    $transaction: jest.fn((callback: any) =>
+      typeof callback === 'function' ? callback(mockDatabaseService) : Promise.all(callback),
+    ),
   };
 
   const sampleInstrument = {
