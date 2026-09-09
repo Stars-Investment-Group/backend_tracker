@@ -11,50 +11,48 @@ jobs:
   # 1. TEST & VALIDATION (CI)
   # ==============================================================================
   test:
-    name: 🧪 Run Linter, Typecheck & Unit Tests
+    name:  Run Linter, Typecheck & Unit Tests
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 📦 Setup pnpm
+      - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 11.21.0
 
-      - name: 🟢 Setup Node.js 22
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
 
-      - name: 📦 Install dependencies
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: ⚙️ Generate Prisma Client
+      - name: Generate Prisma Client
         run: pnpm prisma generate
 
-      - name: 🔍 Run TypeScript Build Check
+      - name: Run TypeScript Build Check
         run: pnpm build
 
-      - name: 🧪 Run Jest Unit Tests
+      - name: Run Jest Unit Tests
         run: pnpm test
 
-  # ==============================================================================
   # 2. DEPLOYMENT TO VPS (CD) - Sur push sur la branche main
-  # ==============================================================================
   deploy:
-    name: 🚀 Deploy to Production VPS
+    name: Deploy to Production VPS
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
-      - name: 📥 Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: 🔐 Deploy via SSH to VPS
+      - name: Deploy via SSH to VPS
         if: "${{ env.VPS_HOST != '' }}"
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -68,5 +66,5 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
             cd ${{ secrets.VPS_PROJECT_PATH || '/var/www/backend_tracker' }}
-            chmod +x ./scripts/*.sh
-            ./scripts/deploy.sh
+            chmod +x ./deploy/scripts/*.sh
+            ./deploy/scripts/deploy.sh

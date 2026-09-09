@@ -56,4 +56,4 @@ echo "vm.max_map_count=262144" | sudo tee -a /etc/sysctl.conf
 echo "fs.file-max=65536" | sudo tee -a /etc/sysctl.conf
 
 echo "🎉 [6/6] Initialisation du VPS terminée avec succès !"
-echo "👉 Vous pouvez maintenant cloner le repo et exécuter './scripts/deploy.sh'"
+echo "👉 Vous pouvez maintenant cloner le repo et exécuter './deploy/scripts/deploy.sh'"

@@ -6,15 +6,19 @@
 
 set -e
 
-COMPOSE_FILE="docker-compose.prod.yml"
+# Positionnement à la racine du projet quel que soit le dossier d'appel
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+cd "$PROJECT_ROOT"
+
+COMPOSE_FILE="deploy/docker-compose.prod.yml"
 ENV_FILE=".env.production"
 
-echo "🚀 [SIG-DEPLOY] Démarrage du déploiement en production..."
+echo "🚀 [SIG-DEPLOY] Démarrage du déploiement en production depuis : $PROJECT_ROOT"
 
 # 1. Vérification du fichier d'environnement
 if [ ! -f "$ENV_FILE" ]; then
-    echo "❌ [ERREUR] Le fichier $ENV_FILE est introuvable !"
-    echo "👉 Créez-le à partir de .env.production.example : cp .env.production.example $ENV_FILE"
+    echo "❌ [ERREUR] Le fichier $ENV_FILE est introuvable à la racine !"
+    echo "👉 Créez-le à partir du template : cp deploy/.env.production.example $ENV_FILE"
     exit 1
 fi
 

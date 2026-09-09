@@ -49,7 +49,7 @@ ENV NODE_ENV=production
 WORKDIR /app
 
 # Copie des scripts d'entrée et artefacts nécessaires
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY deploy/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Copie des fichiers compilés et dépendances de production

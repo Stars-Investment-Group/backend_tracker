@@ -16,10 +16,26 @@ graph TD
 
 ---
 
-## 📋 Pré-requis
+## 📋 Structure du dossier `deploy/`
 
-1. Un serveur VPS avec accès SSH (`root` ou utilisateur sudo).
-2. Un nom de domaine pointant vers l'adresse IP publique de votre VPS (ex: `api.tracker.mondomaine.com` -> `IP_DU_VPS`).
+Tous les artefacts d'exploitation et d'infrastructure sont centralisés dans le dossier `deploy/` :
+```text
+backend_tracker/
+├── deploy/
+│   ├── nginx/
+│   │   ├── nginx.conf
+│   │   └── conf.d/default.conf
+│   ├── scripts/
+│   │   ├── setup-vps.sh        # Initialisation VPS en 1 commande
+│   │   └── deploy.sh           # Déploiement et mise à jour
+│   ├── docker-compose.prod.yml # Stack de production
+│   ├── docker-entrypoint.sh    # Migrations automatiques Prisma
+│   └── .env.production.example # Modèle de configuration de prod
+├── src/                        # Code source NestJS
+├── Dockerfile                  # Multi-Stage Build
+├── docker-compose.yml          # Dev local
+└── package.json
+```
 
 ---
 
@@ -40,8 +56,8 @@ cd backend_tracker
 
 Rendez les scripts exécutables et lancez l'initialisation automatique :
 ```bash
-chmod +x ./scripts/*.sh
-./scripts/setup-vps.sh
+chmod +x ./deploy/scripts/*.sh
+./deploy/scripts/setup-vps.sh
 ```
 > **Ce que fait ce script :**
 > - Met à jour le système d'exploitation.
@@ -53,9 +69,9 @@ chmod +x ./scripts/*.sh
 
 ## 🔑 Étape 2 : Configuration des variables d'environnement
 
-Copiez le modèle de production :
+Copiez le modèle de production vers la racine du projet :
 ```bash
-cp .env.production.example .env.production
+cp deploy/.env.production.example .env.production
 nano .env.production
 ```
 
@@ -84,12 +100,12 @@ REDIS_PASSWORD=MotDePasseRedisTresSecurise2026!
 
 Exécutez le script de déploiement :
 ```bash
-./scripts/deploy.sh
+./deploy/scripts/deploy.sh
 ```
 
 Vérifiez l'état des conteneurs :
 ```bash
-docker compose -f docker-compose.prod.yml ps
+docker compose -f deploy/docker-compose.prod.yml ps
 ```
 Tous les conteneurs (`sig-tracker-backend`, `sig-tracker-postgres`, `sig-tracker-redis`, `sig-tracker-nginx`) doivent afficher le statut `Up` (ou `healthy`).
 
@@ -117,8 +133,6 @@ Une fois que votre nom de domaine pointe vers l'IP du VPS :
 sudo certbot certonly --webroot -w /var/www/certbot -d api.tracker.mondomaine.com --email admin@mondomaine.com --agree-tos --no-eff-email
 ```
 
-Le renouvellement automatique des certificats SSL s'effectuera tous les 3 mois automatiquement.
-
 ---
 
 ## 🔄 Étape 5 : Mises à jour futures
@@ -126,14 +140,8 @@ Le renouvellement automatique des certificats SSL s'effectuera tous les 3 mois a
 Pour mettre à jour le code lors d'une nouvelle version :
 ```bash
 cd /var/www/backend_tracker
-./scripts/deploy.sh
+./deploy/scripts/deploy.sh
 ```
-Le script s'occupe de :
-1. Télécharger la dernière version (`git pull`).
-2. Recompiler l'image Docker de production.
-3. Appliquer automatiquement les migrations Prisma de base de données.
-4. Redémarrer les services avec zéro interruption.
-5. Nettoyer les anciennes images résiduelles.
 
 ---
 
