@@ -22,8 +22,8 @@ export class AlertsController {
   @ApiResponse({ status: 400, description: 'Données Invalides ou solde insuffisant' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Instrument introuvable' })
-  create(@Body() createAlertDto: CreateAlertDto, @CurrentUser('id') userId: any,) {
-    return this.alertsService.create(createAlertDto, userId);
+  create(@Body() createAlertDto: CreateAlertDto, @CurrentUser() user: any) {
+    return this.alertsService.create(createAlertDto, user.id);
   }
 
   @Get()
@@ -32,8 +32,8 @@ export class AlertsController {
     description: "Retourne les Alerts de l'utilisateur",
   })
   @ApiResponse({ status: 200, description: 'Liste de Alerts retournée avec succès' })
-  findAll(@CurrentUser('id') userId: any) {
-    return this.alertsService.findAll(userId);
+  findAll(@CurrentUser() user: any) {
+    return this.alertsService.findAll(user.id);
   }
 
   @Get(':id')
@@ -45,8 +45,8 @@ export class AlertsController {
   @ApiResponse({ status: 200, description: 'Alert retournée avec succès' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Alert introuvable' })
-  findOne(@CurrentUser('id') userId: any,@Param('id', ParseUUIDPipe) id: string) {
-    return this.alertsService.findOne(userId,id);
+  findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    return this.alertsService.findOne(user.id, id);
   }
 
   @Patch(':id')
@@ -59,8 +59,8 @@ export class AlertsController {
   @ApiResponse({ status: 400, description: 'Données invalides' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Alert non trouvée' })
-  update(@CurrentUser('id') userId: any, @Param('id') id: string, @Body() updateAlertDto: UpdateAlertDto) {
-    return this.alertsService.update(userId,id, updateAlertDto);
+  update(@CurrentUser() user: any, @Param('id') id: string, @Body() updateAlertDto: UpdateAlertDto) {
+    return this.alertsService.update(user.id, id, updateAlertDto);
   }
 
   @Delete(':id')
@@ -72,7 +72,7 @@ export class AlertsController {
   @ApiResponse({ status: 200, description: 'Alert supprimée avec succès' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Alert non trouvée' })
-  remove(@CurrentUser('id') userId: any, @Param('id', ParseUUIDPipe) id: string) {
-    return this.alertsService.remove(userId,id);
+  remove(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+    return this.alertsService.remove(user.id, id);
   }
 }
