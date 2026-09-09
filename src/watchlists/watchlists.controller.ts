@@ -21,8 +21,8 @@ export class WatchlistsController {
   @ApiResponse({ status: 400, description: 'Données Invalides' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Liste introuvable' })
-  create(@Body() createWatchlistDto: CreateWatchlistDto, @CurrentUser() user: any) {
-    return this.watchlistsService.create(createWatchlistDto, user.id);
+  create(@Body() createWatchlistDto: CreateWatchlistDto, @CurrentUser('id') userId: string) {
+    return this.watchlistsService.create(createWatchlistDto, userId);
   }
 
   @Get()
@@ -31,8 +31,8 @@ export class WatchlistsController {
     description: "Retourne les listes de surveillances de l'utilisateur",
   })
   @ApiResponse({ status: 200, description: 'Liste de surveillance retournée avec succès' })
-  findAll(@CurrentUser() user: any) {
-    return this.watchlistsService.findAll(user.id);
+  findAll(@CurrentUser('id') userId: string) {
+    return this.watchlistsService.findAll(userId);
   }
 
   @Get(':id')
@@ -44,7 +44,7 @@ export class WatchlistsController {
   @ApiResponse({ status: 200, description: 'Liste de surveillance retournée avec succès' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Liste introuvable' })
-  findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+  findOne(@CurrentUser('id') userId: string, @Param('id', ParseUUIDPipe) id: string) {
     return this.watchlistsService.findOne(user.id, id);
   }
 
@@ -58,7 +58,7 @@ export class WatchlistsController {
   @ApiResponse({ status: 400, description: 'Données invalides' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Liste non trouvée' })
-  update(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string, @Body() updateWatchlistDto: UpdateWatchlistDto) {
+  update(@CurrentUser('id') userId: string, @Param('id', ParseUUIDPipe) id: string, @Body() updateWatchlistDto: UpdateWatchlistDto) {
     return this.watchlistsService.update(user.id, id, updateWatchlistDto);
   }
 
@@ -71,7 +71,7 @@ export class WatchlistsController {
   @ApiResponse({ status: 200, description: 'Liste supprimée avec succès' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Liste non trouvée' })
-  remove(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+  remove(@CurrentUser('id') userId: string, @Param('id', ParseUUIDPipe) id: string) {
     return this.watchlistsService.remove(user.id, id);
   }
 
@@ -86,7 +86,7 @@ export class WatchlistsController {
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Instrument introuvable' })
   addInstrument(
-    @CurrentUser() user: any,
+    @CurrentUser('id') userId: string,
 
     @Param('id', ParseUUIDPipe)
     watchlistId: string,
@@ -108,7 +108,7 @@ export class WatchlistsController {
   })
   @ApiResponse({ status: 200, description: 'Liste instruments retournée avec succès' })
   getInstruments(
-    @CurrentUser() user: any,
+    @CurrentUser('id') userId: string,
 
     @Param('id', ParseUUIDPipe)
     watchlistId: string,
@@ -129,7 +129,7 @@ export class WatchlistsController {
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Liste Instrument non trouvée' })
   removeInstrument(
-    @CurrentUser() user: any,
+    @CurrentUser('id') userId: string,
 
     @Param('id', ParseUUIDPipe)
     watchlistId: string,

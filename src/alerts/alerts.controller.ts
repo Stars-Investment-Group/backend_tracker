@@ -22,8 +22,8 @@ export class AlertsController {
   @ApiResponse({ status: 400, description: 'Données Invalides ou solde insuffisant' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Instrument introuvable' })
-  create(@Body() createAlertDto: CreateAlertDto, @CurrentUser() user: any) {
-    return this.alertsService.create(createAlertDto, user.id);
+  create(@Body() createAlertDto: CreateAlertDto, @CurrentUser('id') userId: string) {
+    return this.alertsService.create(createAlertDto, userId);
   }
 
   @Get()
@@ -32,8 +32,8 @@ export class AlertsController {
     description: "Retourne les Alerts de l'utilisateur",
   })
   @ApiResponse({ status: 200, description: 'Liste de Alerts retournée avec succès' })
-  findAll(@CurrentUser() user: any) {
-    return this.alertsService.findAll(user.id);
+  findAll(@CurrentUser('id') userId: string) {
+    return this.alertsService.findAll(userId);
   }
 
   @Get(':id')
@@ -45,7 +45,7 @@ export class AlertsController {
   @ApiResponse({ status: 200, description: 'Alert retournée avec succès' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Alert introuvable' })
-  findOne(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+  findOne(@CurrentUser('id') userId: string, @Param('id', ParseUUIDPipe) id: string) {
     return this.alertsService.findOne(user.id, id);
   }
 
@@ -59,7 +59,7 @@ export class AlertsController {
   @ApiResponse({ status: 400, description: 'Données invalides' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Alert non trouvée' })
-  update(@CurrentUser() user: any, @Param('id') id: string, @Body() updateAlertDto: UpdateAlertDto) {
+  update(@CurrentUser('id') userId: string, @Param('id') id: string, @Body() updateAlertDto: UpdateAlertDto) {
     return this.alertsService.update(user.id, id, updateAlertDto);
   }
 
@@ -72,7 +72,7 @@ export class AlertsController {
   @ApiResponse({ status: 200, description: 'Alert supprimée avec succès' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Alert non trouvée' })
-  remove(@CurrentUser() user: any, @Param('id', ParseUUIDPipe) id: string) {
+  remove(@CurrentUser('id') userId: string, @Param('id', ParseUUIDPipe) id: string) {
     return this.alertsService.remove(user.id, id);
   }
 }
