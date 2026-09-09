@@ -13,7 +13,6 @@ export class AlertsController {
   constructor(private readonly alertsService: AlertsService) {}
 
   @Post()
-  @Post()
   @ApiOperation({
     summary: 'Créer un Alert',
     description: 'Ajoute un nouveau Alert',
