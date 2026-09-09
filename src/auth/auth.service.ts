@@ -8,6 +8,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import { RoleUser } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { DatabaseService } from '../database/database.service';
@@ -24,6 +25,7 @@ export class AuthService {
     private readonly databaseService: DatabaseService,
     private readonly jwtService: JwtService,
     private readonly auditService: AuditService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -127,8 +129,7 @@ export class AuthService {
    */
   async refreshTokens(refreshToken: string, ipAddress?: string, userAgent?: string) {
     let payload: JwtPayload;
-    const secret = process.env.JWT_SECRET || 'secret-fallback-key';
-    const refreshSecret = process.env.JWT_REFRESH_SECRET || secret + '-refresh';
+    const { refreshSecret } = this.getJwtSecrets();
 
     try {
       payload = await this.jwtService.verifyAsync<JwtPayload>(refreshToken, {
@@ -209,6 +210,29 @@ export class AuthService {
   }
 
   /**
+   * Récupère et valide les clés secrètes JWT
+   */
+  private getJwtSecrets() {
+    const secret =
+      this.configService.get<string>('JWT_SECRET') ||
+      process.env.JWT_SECRET ||
+      (process.env.NODE_ENV !== 'production' ? 'sig-tracker-dev-secret-key' : undefined);
+
+    const refreshSecret =
+      this.configService.get<string>('JWT_REFRESH_SECRET') ||
+      process.env.JWT_REFRESH_SECRET ||
+      (secret ? `${secret}-refresh` : undefined);
+
+    if (!secret || !refreshSecret) {
+      throw new InternalServerErrorException(
+        'FATAL: Configuration des secrets JWT manquante sur le serveur.',
+      );
+    }
+
+    return { secret, refreshSecret };
+  }
+
+  /**
    * Génération de la paire de tokens
    */
   private async generateTokens(userId: string, email: string, role: RoleUser) {
@@ -218,8 +242,7 @@ export class AuthService {
       role,
     };
 
-    const secret = process.env.JWT_SECRET || 'secret-fallback-key';
-    const refreshSecret = process.env.JWT_REFRESH_SECRET || secret + '-refresh';
+    const { secret, refreshSecret } = this.getJwtSecrets();
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
