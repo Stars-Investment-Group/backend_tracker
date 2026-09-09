@@ -19,6 +19,7 @@ import { PortfolioPositionsModule } from './portfolio_positions/portfolio_positi
 import { PriceHistoryModule } from './price_history/price_history.module';
 import { AlertsModule } from './alerts/alerts.module';
 import { WatchlistsModule } from './watchlists/watchlists.module';
+import { NewsModule } from './news/news.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { WatchlistsModule } from './watchlists/watchlists.module';
     PortfolioPositionsModule,
     PriceHistoryModule,
     UemoaModule,
+    NewsModule,
     ThrottlerModule.forRoot({
       throttlers: [
         {
