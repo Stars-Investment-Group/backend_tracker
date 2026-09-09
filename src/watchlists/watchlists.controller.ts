@@ -45,7 +45,7 @@ export class WatchlistsController {
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Liste introuvable' })
   findOne(@CurrentUser('id') userId: string, @Param('id', ParseUUIDPipe) id: string) {
-    return this.watchlistsService.findOne(user.id, id);
+    return this.watchlistsService.findOne(userId, id);
   }
 
   @Patch(':id')
@@ -59,7 +59,7 @@ export class WatchlistsController {
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Liste non trouvée' })
   update(@CurrentUser('id') userId: string, @Param('id', ParseUUIDPipe) id: string, @Body() updateWatchlistDto: UpdateWatchlistDto) {
-    return this.watchlistsService.update(user.id, id, updateWatchlistDto);
+    return this.watchlistsService.update(userId, id, updateWatchlistDto);
   }
 
   @Delete(':id')
@@ -72,7 +72,7 @@ export class WatchlistsController {
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Liste non trouvée' })
   remove(@CurrentUser('id') userId: string, @Param('id', ParseUUIDPipe) id: string) {
-    return this.watchlistsService.remove(user.id, id);
+    return this.watchlistsService.remove(userId, id);
   }
 
   @Post(':id/instruments/:instrumentId')
@@ -95,7 +95,7 @@ export class WatchlistsController {
     instrumentId: string,
   ) {
     return this.watchlistsService.addInstrument(
-      user.id,
+      userId,
       watchlistId,
       instrumentId,
     );
@@ -114,7 +114,7 @@ export class WatchlistsController {
     watchlistId: string,
   ) {
     return this.watchlistsService.getInstruments(
-      user.id,
+      userId,
       watchlistId,
     );
   }
@@ -138,7 +138,7 @@ export class WatchlistsController {
     instrumentId: string,
   ) {
     return this.watchlistsService.removeInstrument(
-      user.id,
+      userId,
       watchlistId,
       instrumentId,
     );
