@@ -1,0 +1,148 @@
+# 🚀 Guide de Déploiement en Production sur VPS
+
+Ce guide décrit la procédure étape par étape pour déployer l'API **Stars Investment Group - Backend Tracker** sur n'importe quel serveur VPS (OVH, Hetzner, DigitalOcean, AWS EC2, Linode, Hostinger, etc.) sous **Ubuntu 22.04 / 24.04 LTS** ou **Debian 12**.
+
+---
+
+## 🏗️ Architecture Déployée
+
+```mermaid
+graph TD
+    Client["🌐 Clients / Web / Mobile / Swagger"] -->|Port 80 / 443 HTTPS| Nginx["🛡️ Nginx Reverse Proxy (Gzip, Rate Limit, SSL)"]
+    Nginx -->|Port 3000| Backend["⚡ NestJS Backend Tracker (Node 22)"]
+    Backend -->|Port 5432| Postgres[("🐘 PostgreSQL 17 (Données sécurisées)")]
+    Backend -->|Port 6379| Redis[("⚡ Redis 8 (Cache & Sessions)")]
+```
+
+---
+
+## 📋 Pré-requis
+
+1. Un serveur VPS avec accès SSH (`root` ou utilisateur sudo).
+2. Un nom de domaine pointant vers l'adresse IP publique de votre VPS (ex: `api.tracker.mondomaine.com` -> `IP_DU_VPS`).
+
+---
+
+## ⚡ Étape 1 : Initialisation du VPS en 1 commande
+
+Connectez-vous en SSH à votre VPS :
+```bash
+ssh root@IP_DE_VOTRE_VPS
+```
+
+Clonez le projet dans `/var/www/backend_tracker` :
+```bash
+sudo mkdir -p /var/www
+cd /var/www
+git clone https://github.com/Stars-Investment-Group/backend_tracker.git
+cd backend_tracker
+```
+
+Rendez les scripts exécutables et lancez l'initialisation automatique :
+```bash
+chmod +x ./scripts/*.sh
+./scripts/setup-vps.sh
+```
+> **Ce que fait ce script :**
+> - Met à jour le système d'exploitation.
+> - Configure le pare-feu **UFW** (ouvre les ports 22, 80 et 443 uniquement).
+> - Installe la dernière version officielle de **Docker** et **Docker Compose**.
+> - Ajuste les limites du noyau Linux (Kernel) pour les performances élevées.
+
+---
+
+## 🔑 Étape 2 : Configuration des variables d'environnement
+
+Copiez le modèle de production :
+```bash
+cp .env.production.example .env.production
+nano .env.production
+```
+
+Remplissez les valeurs sécurisées :
+```env
+NODE_ENV=production
+PORT=3000
+CORS_ORIGIN=https://tracker.starsinvestment.com,https://app.starsinvestment.com
+
+# Générer une clé avec: openssl rand -base64 48
+JWT_SECRET=VotreCleSecreteTresLongueEtAleatoire123456789!
+JWT_REFRESH_SECRET=VotreCleRefreshTokenTresLongueEtAleatoire123456789!
+
+DB_USER=sig_prod_user
+DB_PASSWORD=MotDePasseTresSecuriseDB2026!
+DB_NAME=sig_tracker_prod
+DATABASE_URL="postgresql://sig_prod_user:MotDePasseTresSecuriseDB2026!@postgres:5432/sig_tracker_prod?schema=public"
+
+REDIS_PASSWORD=MotDePasseRedisTresSecurise2026!
+```
+*(Sauvegardez avec `Ctrl + O`, puis quittez avec `Ctrl + X`)*.
+
+---
+
+## 🚀 Étape 3 : Lancement du projet en Production
+
+Exécutez le script de déploiement :
+```bash
+./scripts/deploy.sh
+```
+
+Vérifiez l'état des conteneurs :
+```bash
+docker compose -f docker-compose.prod.yml ps
+```
+Tous les conteneurs (`sig-tracker-backend`, `sig-tracker-postgres`, `sig-tracker-redis`, `sig-tracker-nginx`) doivent afficher le statut `Up` (ou `healthy`).
+
+Testez le Healthcheck :
+```bash
+curl http://localhost/health
+```
+Réponse attendue :
+```json
+{
+  "status": "ok",
+  "services": {
+    "api": "healthy",
+    "database": { "status": "healthy", "latencyMs": 2 }
+  }
+}
+```
+
+---
+
+## 🔒 Étape 4 : Activer le Certificat SSL Gratuit (HTTPS Let's Encrypt)
+
+Une fois que votre nom de domaine pointe vers l'IP du VPS :
+```bash
+sudo certbot certonly --webroot -w /var/www/certbot -d api.tracker.mondomaine.com --email admin@mondomaine.com --agree-tos --no-eff-email
+```
+
+Le renouvellement automatique des certificats SSL s'effectuera tous les 3 mois automatiquement.
+
+---
+
+## 🔄 Étape 5 : Mises à jour futures
+
+Pour mettre à jour le code lors d'une nouvelle version :
+```bash
+cd /var/www/backend_tracker
+./scripts/deploy.sh
+```
+Le script s'occupe de :
+1. Télécharger la dernière version (`git pull`).
+2. Recompiler l'image Docker de production.
+3. Appliquer automatiquement les migrations Prisma de base de données.
+4. Redémarrer les services avec zéro interruption.
+5. Nettoyer les anciennes images résiduelles.
+
+---
+
+## 🤖 Étape 6 (Optionnelle) : Déploiement Continu Automatique (GitHub Actions)
+
+Pour que chaque `git push` sur `main` déploie automatiquement sur votre VPS sans que vous n'ayez rien à taper :
+
+Dans votre repo GitHub : **Settings > Secrets and variables > Actions > New repository secret** :
+* `VPS_HOST` : L'adresse IP de votre VPS (ex: `142.93.xxx.xxx`).
+* `VPS_USERNAME` : `root` (ou votre utilisateur sudo).
+* `VPS_SSH_KEY` : Votre clé privée SSH (contenu de `~/.ssh/id_rsa`).
+* `VPS_PROJECT_PATH` : `/var/www/backend_tracker`.

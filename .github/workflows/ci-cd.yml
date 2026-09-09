@@ -1,0 +1,72 @@
+name: CI/CD Pipeline - Stars Investment Group Tracker
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ==============================================================================
+  # 1. TEST & VALIDATION (CI)
+  # ==============================================================================
+  test:
+    name: 🧪 Run Linter, Typecheck & Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 11.21.0
+
+      - name: 🟢 Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: 📦 Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: ⚙️ Generate Prisma Client
+        run: pnpm prisma generate
+
+      - name: 🔍 Run TypeScript Build Check
+        run: pnpm build
+
+      - name: 🧪 Run Jest Unit Tests
+        run: pnpm test
+
+  # ==============================================================================
+  # 2. DEPLOYMENT TO VPS (CD) - Sur push sur la branche main
+  # ==============================================================================
+  deploy:
+    name: 🚀 Deploy to Production VPS
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔐 Deploy via SSH to VPS
+        if: "${{ env.VPS_HOST != '' }}"
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USERNAME }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
+          PROJECT_PATH: ${{ secrets.VPS_PROJECT_PATH || '/var/www/backend_tracker' }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ${{ secrets.VPS_PROJECT_PATH || '/var/www/backend_tracker' }}
+            chmod +x ./scripts/*.sh
+            ./scripts/deploy.sh
