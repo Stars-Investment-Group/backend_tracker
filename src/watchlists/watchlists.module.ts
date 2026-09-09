@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { WatchlistsService } from './watchlists.service';
 import { WatchlistsController } from './watchlists.controller';
-import { DatabaseModule } from 'src/database/database.module';
+import { DatabaseModule } from '../database/database.module';
 
 @Module({
   imports:[DatabaseModule],
