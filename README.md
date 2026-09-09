@@ -130,7 +130,8 @@ backend_tracker/
 │   │   └── deploy.sh             # Script de deploiement en 1 commande
 │   ├── docker-compose.prod.yml   # Stack Docker de production
 │   ├── docker-entrypoint.sh      # Script d'entree et migrations Prisma
-│   └── .env.production.example   # Modele de configuration de production
+│   ├── .env.production.example   # Modele de configuration de production
+│   └── DEPLOYMENT.md             # Guide complet de deploiement sur VPS
 ├── prisma/
 │   ├── schema.prisma             # Modeles de donnees et relations PostgreSQL
 │   └── migrations/               # Historique des migrations de base de donnees
@@ -154,7 +155,6 @@ backend_tracker/
 │   └── main.ts                   # Point d'entree et bootstrap NestJS
 ├── Dockerfile                    # Dockerfile Multi-Stage (Dev, Build, Prod)
 ├── docker-compose.yml            # Stack Docker de developpement local
-├── DEPLOYMENT.md                 # Guide complet de deploiement sur VPS
 ├── package.json
 └── tsconfig.json
 ```
@@ -288,7 +288,7 @@ http://localhost:3000/api
 
 ## Deploiement en Production
 
-Consultez le guide dedie : **[DEPLOYMENT.md](DEPLOYMENT.md)**
+Consultez le guide dedie : **[deploy/DEPLOYMENT.md](deploy/DEPLOYMENT.md)**
 
 ### Resume du deploiement en 3 commandes sur le VPS :
 ```bash

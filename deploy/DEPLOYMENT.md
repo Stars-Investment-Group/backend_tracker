@@ -30,10 +30,12 @@ backend_tracker/
 │   │   └── deploy.sh           # Deploiement et mise a jour
 │   ├── docker-compose.prod.yml # Stack de production
 │   ├── docker-entrypoint.sh    # Migrations automatiques Prisma
-│   └── .env.production.example # Modele de configuration de prod
+│   ├── .env.production.example # Modele de configuration de prod
+│   └── DEPLOYMENT.md           # Documentation technique VPS
 ├── src/                        # Code source NestJS
 ├── Dockerfile                  # Multi-Stage Build
 ├── docker-compose.yml          # Dev local
+├── README.md                   # Documentation generale
 └── package.json
 ```
 
