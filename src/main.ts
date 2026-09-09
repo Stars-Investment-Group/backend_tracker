@@ -9,7 +9,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const port = process.env.PORT ?? 3000;
 
-  // 1. Sécurisation des headers HTTP avec Helmet
+  // 1. Securisation des headers HTTP avec Helmet
   app.use(
     helmet({
       contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
@@ -17,7 +17,7 @@ async function bootstrap() {
     }),
   );
 
-  // 2. Filtre Global d'Exceptions standardisé
+  // 2. Filtre Global d'Exceptions standardise
   app.useGlobalFilters(new AllExceptionsFilter());
 
   // 3. Validation globale des DTOs
@@ -32,7 +32,7 @@ async function bootstrap() {
     }),
   );
 
-  // 4. Activation de CORS sécurisé
+  // 4. Activation de CORS securise
   app.enableCors({
     origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
@@ -43,7 +43,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Stars Investment Group - API Tracker')
     .setDescription(
-      'Documentation officielle de l’API pour la gestion des portefeuilles, instruments, transactions, utilisateurs et audits.',
+      'Documentation officielle de l API pour la gestion des portefeuilles, instruments, transactions, utilisateurs et audits.',
     )
     .setVersion('1.0')
     .addBearerAuth(
@@ -61,8 +61,8 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   await app.listen(port);
-  console.log(`🚀 Application démarrée sur le port ${port}`);
-  console.log(`📚 Swagger disponible sur http://localhost:${port}/api`);
-  console.log(`🩺 Healthcheck disponible sur http://localhost:${port}/health`);
+  console.log(`[INIT] Application demarree sur le port ${port}`);
+  console.log(`[INIT] Swagger disponible sur http://localhost:${port}/api`);
+  console.log(`[INIT] Healthcheck disponible sur http://localhost:${port}/health`);
 }
 void bootstrap();

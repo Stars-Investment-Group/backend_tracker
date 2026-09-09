@@ -9,20 +9,15 @@ export class LoggerMiddleware implements NestMiddleware {
     const userAgent = req.get('user-agent') || 'unknown';
 
     const start = Date.now();
-    
-    console.log(`📝 [${timestamp}] ${method} ${originalUrl} - ${ip} - ${userAgent}`);
-    
-    // Log la réponse
-    //res.on('finish', () => {
-      //const { statusCode } = res;
-     // console.log(`✅ [${timestamp}] ${method} ${originalUrl} - ${statusCode}`);
-    //});
+
+    console.log(`[${timestamp}] ${method} ${originalUrl} - ${ip} - ${userAgent}`);
+
     res.on('finish', () => {
-      const duration = Date.now() - start; // duree reelle
-      const endTimestamp = new Date().toISOString(); // heure reelle de fin
+      const duration = Date.now() - start;
+      const endTimestamp = new Date().toISOString();
       console.log(`[${endTimestamp}] ${method} ${originalUrl} - ${res.statusCode} (${duration}ms)`);
-      });
-    
+    });
+
     next();
   }
 }
