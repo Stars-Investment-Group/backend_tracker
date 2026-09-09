@@ -5,10 +5,20 @@ import { PortfolioPositionsService } from './portfolio_positions.service';
 describe('PortfolioPositionsController', () => {
   let controller: PortfolioPositionsController;
 
+  const mockPortfolioPositionsService = {
+    findAll: jest.fn(),
+    findByPortfolio: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [PortfolioPositionsController],
-      providers: [PortfolioPositionsService],
+      providers: [
+        {
+          provide: PortfolioPositionsService,
+          useValue: mockPortfolioPositionsService,
+        },
+      ],
     }).compile();
 
     controller = module.get<PortfolioPositionsController>(PortfolioPositionsController);
