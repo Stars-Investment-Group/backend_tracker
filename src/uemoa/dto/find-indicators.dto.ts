@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsBooleanString } from 'class-validator';
 
 export class FindIndicatorsDto {
   @IsOptional()
@@ -16,4 +16,8 @@ export class FindIndicatorsDto {
   @IsOptional()
   @IsString()
   seriesCode?: string;
+
+  @IsOptional()
+  @IsBooleanString()
+  includeRevisions?: string;
 }

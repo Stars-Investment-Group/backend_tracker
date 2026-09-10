@@ -17,12 +17,6 @@ export interface TransformedIndicator {
   value: number;
 }
 
-export interface LoadResult {
-  crees: number;
-  revises: number;
-  inchanges: number;
-}
-
 interface SeriesConfig {
   provider: string;
   dataset: string;
@@ -78,106 +72,39 @@ export class UemoaService {
 
   // ---------- LOAD ----------
 
-  /**
-   * LOAD avec gestion des millesimes.
-   *
-   * Trois cas possibles pour chaque observation :
-   *   1. Aucune valeur connue      -> creation d'une premiere version
-   *   2. Valeur identique          -> aucune ecriture, on note qu'on l'a revue
-   *   3. Valeur revisee            -> l'ancienne version est archivee,
-   *                                   une nouvelle version est creee
-   *
-   * Ce fonctionnement conserve l'historique des revisions sans faire grossir
-   * la table a chaque synchronisation : une ligne n'est ajoutee que lorsque
-   * la source publie effectivement une valeur differente.
-   */
-  async saveIndicators(rows: TransformedIndicator[]): Promise<LoadResult> {
-    const res: LoadResult = { crees: 0, revises: 0, inchanges: 0 };
-    const aujourdhui = new Date();
-    aujourdhui.setUTCHours(0, 0, 0, 0);
+  async saveIndicators(rows: TransformedIndicator[]): Promise<number> {
+    let savedCount = 0;
 
     for (const row of rows) {
-      if (row.value === null || row.value === undefined || Number.isNaN(row.value)) {
-        continue;
-      }
-
-      const cle = {
-        provider: row.provider,
-        dataset: row.dataset,
-        seriesCode: row.seriesCode,
-        period: row.period,
-      };
-
-      const courant = await this.db.economicIndicator.findFirst({
-        where: { ...cle, isLatest: true },
+      await this.db.economicIndicator.upsert({
+        where: {
+          provider_dataset_seriesCode_period: {
+            provider: row.provider,
+            dataset: row.dataset,
+            seriesCode: row.seriesCode,
+            period: row.period,
+          },
+        },
+        update: {
+          value: row.value,
+          seriesName: row.seriesName,
+          fetchedAt: new Date(),
+        },
+        create: {
+          provider: row.provider,
+          dataset: row.dataset,
+          seriesCode: row.seriesCode,
+          seriesName: row.seriesName,
+          country: row.country,
+          period: row.period,
+          value: row.value,
+        },
       });
-
-      // Cas 1 : premiere apparition de cette observation
-      if (!courant) {
-        await this.db.economicIndicator.create({
-          data: {
-            ...cle,
-            seriesName: row.seriesName,
-            country: row.country,
-            value: row.value,
-            vintageDate: aujourdhui,
-            isLatest: true,
-            lastSeenAt: new Date(),
-          },
-        });
-        res.crees++;
-        continue;
-      }
-
-      // Cas 2 : la valeur n'a pas bouge
-      if (courant.value === row.value) {
-        await this.db.economicIndicator.update({
-          where: { id: courant.id },
-          data: { lastSeenAt: new Date() },
-        });
-        res.inchanges++;
-        continue;
-      }
-
-      // Cas 3 : revision. L'ancienne version est conservee mais archivee.
-      // La transaction garantit qu'il n'existe jamais deux versions courantes.
-      await this.db.$transaction([
-        this.db.economicIndicator.update({
-          where: { id: courant.id },
-          data: { isLatest: false },
-        }),
-        this.db.economicIndicator.upsert({
-          where: {
-            uniq_indicator_vintage: { ...cle, vintageDate: aujourdhui },
-          },
-          update: {
-            value: row.value,
-            seriesName: row.seriesName,
-            isLatest: true,
-            lastSeenAt: new Date(),
-          },
-          create: {
-            ...cle,
-            seriesName: row.seriesName,
-            country: row.country,
-            value: row.value,
-            vintageDate: aujourdhui,
-            isLatest: true,
-            lastSeenAt: new Date(),
-          },
-        }),
-      ]);
-
-      this.logger.log(
-        `Revision ${row.seriesCode} ${row.period} : ${courant.value} -> ${row.value}`,
-      );
-      res.revises++;
+      savedCount++;
     }
 
-    this.logger.log(
-      `${res.crees} creees, ${res.revises} revisees, ${res.inchanges} inchangees`,
-    );
-    return res;
+    this.logger.log(`${savedCount} indicateurs sauvegardés dans economic_indicators`);
+    return savedCount;
   }
 
   // ---------- PIPELINE ----------
@@ -187,7 +114,7 @@ export class UemoaService {
     dataset: string,
     seriesCode: string,
     country: string | null = null,
-  ): Promise<LoadResult> {
+  ): Promise<number> {
     const raw = await this.fetchSeries(provider, dataset, seriesCode);
     const rows = this.transformSeries(raw, country);
     return this.saveIndicators(rows);
@@ -207,9 +134,7 @@ export class UemoaService {
           config.seriesCode,
           config.country,
         );
-        this.logger.log(
-          `OK ${config.seriesCode} : ${count.crees} creees, ${count.revises} revisees, ${count.inchanges} inchangees`,
-        );
+        this.logger.log(`OK ${config.provider}/${config.dataset}/${config.seriesCode} : ${count} lignes`);
       } catch (error) {
         this.logger.error(
           `ECHEC ${config.provider}/${config.dataset}/${config.seriesCode} : ${error.message}`,
@@ -233,11 +158,9 @@ export class UemoaService {
     if (filters.provider) where.provider = filters.provider;
     if (filters.seriesCode) where.seriesCode = filters.seriesCode;
 
-    if (!filters.includeRevisions) where.isLatest = true;
-
     return this.db.economicIndicator.findMany({
       where,
-      orderBy: [{ seriesCode: 'asc' }, { period: 'asc' }, { vintageDate: 'desc' }],
+      orderBy: [{ seriesCode: 'asc' }, { period: 'asc' }],
     });
   }
 
@@ -247,7 +170,6 @@ export class UemoaService {
    */
   async listAvailableSeries() {
     const rows = await this.db.economicIndicator.findMany({
-      where: { isLatest: true },
       distinct: ['provider', 'dataset', 'seriesCode'],
       select: {
         provider: true,
@@ -255,35 +177,11 @@ export class UemoaService {
         seriesCode: true,
         seriesName: true,
         country: true,
-        vintageDate: true,
-        lastSeenAt: true,
+        fetchedAt: true,
       },
       orderBy: { seriesCode: 'asc' },
     });
     return rows;
-  }
-
-  /**
-   * Historique complet des revisions d'une observation precise.
-   * Alimente le bloc "Revision History" des maquettes.
-   */
-  async getRevisionHistory(
-    provider: string,
-    dataset: string,
-    seriesCode: string,
-    period: string,
-  ) {
-    return this.db.economicIndicator.findMany({
-      where: { provider, dataset, seriesCode, period },
-      orderBy: { vintageDate: 'desc' },
-      select: {
-        period: true,
-        value: true,
-        vintageDate: true,
-        isLatest: true,
-        lastSeenAt: true,
-      },
-    });
   }
 
   // ---------- ORDONNANCEMENT ----------
