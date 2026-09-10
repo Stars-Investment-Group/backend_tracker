@@ -36,12 +36,6 @@ export class UemoaController {
     name: 'seriesCode', required: false, example: 'ZZZSF3100A0GP',
     description: "Code exact de la série, pour cibler un seul indicateur.",
   })
-  @ApiQuery({
-    name: 'includeRevisions', required: false, example: 'false',
-    description:
-      "Par défaut seule la version courante de chaque observation est retournée. " +
-      "Mettre à true pour obtenir également les versions antérieures (millésimes).",
-  })
   @ApiResponse({
     status: 200,
     description: 'Liste des observations.',
@@ -91,41 +85,6 @@ export class UemoaController {
   })
   async listSeries() {
     return this.uemoaService.listAvailableSeries();
-  }
-
-  @Public()
-  @Get('revisions')
-  @ApiOperation({
-    summary: "Historique des révisions d'une observation",
-    description:
-      "Retourne toutes les versions successives publiées pour une série et une période " +
-      "données, de la plus récente à la plus ancienne. Chaque version porte son millésime " +
-      "(date à laquelle la valeur a été publiée par la source). Alimente le bloc " +
-      "« Revision History » du Data Explorer.",
-  })
-  @ApiQuery({ name: 'provider', required: true, example: 'BCEAO' })
-  @ApiQuery({ name: 'dataset', required: true, example: 'TC_A' })
-  @ApiQuery({ name: 'seriesCode', required: true, example: 'ZZZSF3100A0GP' })
-  @ApiQuery({ name: 'period', required: true, example: '2024' })
-  @ApiResponse({
-    status: 200,
-    description: "Versions successives, de la plus récente à la plus ancienne.",
-    schema: {
-      example: [
-        { period: '2024', value: 606.35, vintage_date: '2026-08-29', is_latest: true,
-          last_seen_at: '2026-09-10T23:13:17.000Z' },
-        { period: '2024', value: 604.10, vintage_date: '2026-05-14', is_latest: false,
-          last_seen_at: '2026-08-28T06:00:00.000Z' },
-      ],
-    },
-  })
-  async getRevisions(
-    @Query('provider') provider: string,
-    @Query('dataset') dataset: string,
-    @Query('seriesCode') seriesCode: string,
-    @Query('period') period: string,
-  ) {
-    return this.uemoaService.getRevisionHistory(provider, dataset, seriesCode, period);
   }
 
   @Post('sync')
