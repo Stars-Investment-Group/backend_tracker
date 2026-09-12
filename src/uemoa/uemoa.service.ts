@@ -2,8 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { Prisma } from '@prisma/client';
 import { DatabaseService } from '../database/database.service';
 import { FindIndicatorsDto } from './dto/find-indicators.dto';
+import { SERIES_TO_SYNC } from './series.config';
 
 const DBNOMICS_BASE_URL = 'https://api.db.nomics.world/v22';
 
@@ -14,7 +16,7 @@ export interface TransformedIndicator {
   seriesName: string;
   country: string | null;
   period: string;
-  value: number;
+  value: number | null;
 }
 
 export interface LoadResult {
@@ -22,18 +24,6 @@ export interface LoadResult {
   revises: number;
   inchanges: number;
 }
-
-interface SeriesConfig {
-  provider: string;
-  dataset: string;
-  seriesCode: string;
-  country: string | null;
-}
-
-const SERIES_TO_SYNC: SeriesConfig[] = [
-  { provider: 'BCEAO', dataset: 'TC_A', seriesCode: 'ZZZSF3100A0GP', country: null },
-  { provider: 'BCEAO', dataset: 'PIBN', seriesCode: 'KKKSR1015A0BP', country: 'SN' },
-];
 
 @Injectable()
 export class UemoaService {
@@ -72,106 +62,139 @@ export class UemoaService {
       seriesName: series_name,
       country,
       period: p,
-      value: value[index],
+      value: this.toNumber(value[index]),
     }));
+  }
+
+  /**
+   * DBnomics represente les valeurs manquantes par la chaine "NA".
+   * Toute valeur non numerique est convertie en null et sera ecartee au chargement.
+   */
+  private toNumber(v: unknown): number | null {
+    if (v === null || v === undefined) return null;
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
   }
 
   // ---------- LOAD ----------
 
   /**
-   * LOAD avec gestion des millesimes.
+   * LOAD avec gestion des millesimes, optimise pour limiter les allers-retours.
    *
-   * Trois cas possibles pour chaque observation :
-   *   1. Aucune valeur connue      -> creation d'une premiere version
-   *   2. Valeur identique          -> aucune ecriture, on note qu'on l'a revue
-   *   3. Valeur revisee            -> l'ancienne version est archivee,
-   *                                   une nouvelle version est creee
+   * Au lieu d'interroger la base pour chaque observation, on charge en une seule
+   * requete toutes les valeurs courantes de la serie, on compare en memoire, puis
+   * on ecrit de facon groupee. On passe d'environ 130 requetes par serie a 3 ou 4.
    *
-   * Ce fonctionnement conserve l'historique des revisions sans faire grossir
-   * la table a chaque synchronisation : une ligne n'est ajoutee que lorsque
-   * la source publie effectivement une valeur differente.
+   * Trois cas, inchanges sur le fond :
+   *   1. Aucune valeur connue -> creation d'une premiere version
+   *   2. Valeur identique     -> aucune nouvelle ligne, lastSeenAt rafraichi en lot
+   *   3. Valeur revisee       -> ancienne version archivee, nouvelle version creee
    */
   async saveIndicators(rows: TransformedIndicator[]): Promise<LoadResult> {
     const res: LoadResult = { crees: 0, revises: 0, inchanges: 0 };
+    if (rows.length === 0) return res;
+
+    const maintenant = new Date();
     const aujourdhui = new Date();
     aujourdhui.setUTCHours(0, 0, 0, 0);
 
-    for (const row of rows) {
-      if (row.value === null || row.value === undefined || Number.isNaN(row.value)) {
-        continue;
-      }
+    // Seules les observations numeriques sont exploitables
+    const valides = rows.filter(
+      (r) => r.value !== null && typeof r.value === 'number' && Number.isFinite(r.value),
+    );
+    if (valides.length === 0) return res;
 
-      const cle = {
-        provider: row.provider,
-        dataset: row.dataset,
-        seriesCode: row.seriesCode,
-        period: row.period,
-      };
+    const { provider, dataset, seriesCode } = valides[0];
 
-      const courant = await this.db.economicIndicator.findFirst({
-        where: { ...cle, isLatest: true },
-      });
+    // 1 requete : toutes les versions courantes de cette serie
+    const existantes = await this.db.economicIndicator.findMany({
+      where: { provider, dataset, seriesCode, isLatest: true },
+      select: { id: true, period: true, value: true },
+    });
+    const parPeriode = new Map(existantes.map((e) => [e.period, e]));
 
-      // Cas 1 : premiere apparition de cette observation
+    const aCreer: any[] = [];
+    const aArchiver: string[] = [];
+    const inchangees: string[] = [];
+
+    for (const row of valides) {
+      const courant = parPeriode.get(row.period);
+
       if (!courant) {
-        await this.db.economicIndicator.create({
-          data: {
-            ...cle,
-            seriesName: row.seriesName,
-            country: row.country,
-            value: row.value,
-            vintageDate: aujourdhui,
-            isLatest: true,
-            lastSeenAt: new Date(),
-          },
+        aCreer.push({
+          provider: row.provider,
+          dataset: row.dataset,
+          seriesCode: row.seriesCode,
+          seriesName: row.seriesName,
+          country: row.country,
+          period: row.period,
+          value: row.value as number,
+          vintageDate: aujourdhui,
+          isLatest: true,
+          lastSeenAt: maintenant,
         });
         res.crees++;
         continue;
       }
 
-      // Cas 2 : la valeur n'a pas bouge
       if (courant.value === row.value) {
-        await this.db.economicIndicator.update({
-          where: { id: courant.id },
-          data: { lastSeenAt: new Date() },
-        });
+        inchangees.push(courant.id);
         res.inchanges++;
         continue;
       }
 
-      // Cas 3 : revision. L'ancienne version est conservee mais archivee.
-      // La transaction garantit qu'il n'existe jamais deux versions courantes.
-      await this.db.$transaction([
-        this.db.economicIndicator.update({
-          where: { id: courant.id },
-          data: { isLatest: false },
-        }),
-        this.db.economicIndicator.upsert({
-          where: {
-            uniq_indicator_vintage: { ...cle, vintageDate: aujourdhui },
-          },
-          update: {
-            value: row.value,
-            seriesName: row.seriesName,
-            isLatest: true,
-            lastSeenAt: new Date(),
-          },
-          create: {
-            ...cle,
-            seriesName: row.seriesName,
-            country: row.country,
-            value: row.value,
-            vintageDate: aujourdhui,
-            isLatest: true,
-            lastSeenAt: new Date(),
-          },
-        }),
-      ]);
-
+      aArchiver.push(courant.id);
+      aCreer.push({
+        provider: row.provider,
+        dataset: row.dataset,
+        seriesCode: row.seriesCode,
+        seriesName: row.seriesName,
+        country: row.country,
+        period: row.period,
+        value: row.value as number,
+        vintageDate: aujourdhui,
+        isLatest: true,
+        lastSeenAt: maintenant,
+      });
       this.logger.log(
         `Revision ${row.seriesCode} ${row.period} : ${courant.value} -> ${row.value}`,
       );
       res.revises++;
+    }
+
+    // Ecritures groupees, dans une transaction pour garantir la coherence
+    const operations: Prisma.PrismaPromise<unknown>[] = [];
+
+    if (aArchiver.length > 0) {
+      operations.push(
+        this.db.economicIndicator.updateMany({
+          where: { id: { in: aArchiver } },
+          data: { isLatest: false },
+        }),
+      );
+    }
+
+    if (aCreer.length > 0) {
+      operations.push(
+        this.db.economicIndicator.createMany({
+          data: aCreer,
+          skipDuplicates: true,
+        }),
+      );
+    }
+
+    if (inchangees.length > 0) {
+      operations.push(
+        this.db.economicIndicator.updateMany({
+          where: { id: { in: inchangees } },
+          data: { lastSeenAt: maintenant },
+        }),
+      );
+    }
+
+    if (operations.length > 0) {
+      await this.db.$transaction(operations);
     }
 
     this.logger.log(
