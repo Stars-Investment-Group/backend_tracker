@@ -3,7 +3,10 @@ import { NotFoundException } from '@nestjs/common';
 import { PriceHistoryService } from './price_history.service';
 import { DatabaseService } from '../database/database.service';
 import { CreatePriceHistoryDto } from './dto/create-price-history.dto';
-import { QueryPriceHistoryDto, PriceSortOrder } from './dto/query-price-history.dto';
+import {
+  QueryPriceHistoryDto,
+  PriceSortOrder,
+} from './dto/query-price-history.dto';
 
 describe('PriceHistoryService', () => {
   let service: PriceHistoryService;
@@ -82,15 +85,21 @@ describe('PriceHistoryService', () => {
     it('should throw NotFoundException if instrument does not exist', async () => {
       mockDatabaseService.instrument.findUnique.mockResolvedValue(null);
 
-      await expect(service.create(createDto)).rejects.toThrow(NotFoundException);
+      await expect(service.create(createDto)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(mockDatabaseService.instrument.findUnique).toHaveBeenCalledWith({
         where: { id: createDto.instrumentId },
       });
     });
 
     it('should upsert and return price history when instrument exists', async () => {
-      mockDatabaseService.instrument.findUnique.mockResolvedValue(sampleInstrument);
-      mockDatabaseService.priceHistory.upsert.mockResolvedValue(samplePriceHistory);
+      mockDatabaseService.instrument.findUnique.mockResolvedValue(
+        sampleInstrument,
+      );
+      mockDatabaseService.priceHistory.upsert.mockResolvedValue(
+        samplePriceHistory,
+      );
 
       const result = await service.create(createDto);
 
@@ -140,7 +149,9 @@ describe('PriceHistoryService', () => {
 
   describe('bulkCreate', () => {
     it('should insert multiple price records sequentially and return count', async () => {
-      mockDatabaseService.priceHistory.upsert.mockResolvedValue(samplePriceHistory);
+      mockDatabaseService.priceHistory.upsert.mockResolvedValue(
+        samplePriceHistory,
+      );
 
       const bulkDto = {
         prices: [
@@ -178,8 +189,12 @@ describe('PriceHistoryService', () => {
     });
 
     it('should return paginated price history with date filters', async () => {
-      mockDatabaseService.instrument.findUnique.mockResolvedValue(sampleInstrument);
-      mockDatabaseService.priceHistory.findMany.mockResolvedValue([samplePriceHistory]);
+      mockDatabaseService.instrument.findUnique.mockResolvedValue(
+        sampleInstrument,
+      );
+      mockDatabaseService.priceHistory.findMany.mockResolvedValue([
+        samplePriceHistory,
+      ]);
       mockDatabaseService.priceHistory.count.mockResolvedValue(1);
 
       const query: QueryPriceHistoryDto = {
@@ -226,9 +241,15 @@ describe('PriceHistoryService', () => {
 
   describe('findByTicker', () => {
     it('should find instrument by ticker and return its history', async () => {
-      mockDatabaseService.instrument.findFirst.mockResolvedValue(sampleInstrument);
-      mockDatabaseService.instrument.findUnique.mockResolvedValue(sampleInstrument);
-      mockDatabaseService.priceHistory.findMany.mockResolvedValue([samplePriceHistory]);
+      mockDatabaseService.instrument.findFirst.mockResolvedValue(
+        sampleInstrument,
+      );
+      mockDatabaseService.instrument.findUnique.mockResolvedValue(
+        sampleInstrument,
+      );
+      mockDatabaseService.priceHistory.findMany.mockResolvedValue([
+        samplePriceHistory,
+      ]);
       mockDatabaseService.priceHistory.count.mockResolvedValue(1);
 
       const result = await service.findByTicker('AAPL', {});
@@ -250,8 +271,12 @@ describe('PriceHistoryService', () => {
 
   describe('getLatestPrice', () => {
     it('should return latest quote for instrument', async () => {
-      mockDatabaseService.instrument.findUnique.mockResolvedValue(sampleInstrument);
-      mockDatabaseService.priceHistory.findFirst.mockResolvedValue(samplePriceHistory);
+      mockDatabaseService.instrument.findUnique.mockResolvedValue(
+        sampleInstrument,
+      );
+      mockDatabaseService.priceHistory.findFirst.mockResolvedValue(
+        samplePriceHistory,
+      );
 
       const result = await service.getLatestPrice(sampleInstrument.id);
 
@@ -273,19 +298,25 @@ describe('PriceHistoryService', () => {
     });
 
     it('should throw NotFoundException if no quotes exist for instrument', async () => {
-      mockDatabaseService.instrument.findUnique.mockResolvedValue(sampleInstrument);
+      mockDatabaseService.instrument.findUnique.mockResolvedValue(
+        sampleInstrument,
+      );
       mockDatabaseService.priceHistory.findFirst.mockResolvedValue(null);
 
-      await expect(
-        service.getLatestPrice(sampleInstrument.id),
-      ).rejects.toThrow(NotFoundException);
+      await expect(service.getLatestPrice(sampleInstrument.id)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('remove', () => {
     it('should delete existing price quote by ID', async () => {
-      mockDatabaseService.priceHistory.findUnique.mockResolvedValue(samplePriceHistory);
-      mockDatabaseService.priceHistory.delete.mockResolvedValue(samplePriceHistory);
+      mockDatabaseService.priceHistory.findUnique.mockResolvedValue(
+        samplePriceHistory,
+      );
+      mockDatabaseService.priceHistory.delete.mockResolvedValue(
+        samplePriceHistory,
+      );
 
       const result = await service.remove(samplePriceHistory.id);
 

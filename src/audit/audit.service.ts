@@ -28,8 +28,12 @@ export class AuditService {
         action: params.action,
         entityType: params.entityType,
         entityId: params.entityId ?? null,
-        oldValues: params.oldValues ? (params.oldValues as Prisma.InputJsonValue) : Prisma.JsonNull,
-        newValues: params.newValues ? (params.newValues as Prisma.InputJsonValue) : Prisma.JsonNull,
+        oldValues: params.oldValues
+          ? (params.oldValues as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
+        newValues: params.newValues
+          ? (params.newValues as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
         ipAddress: params.ipAddress ?? null,
         userAgent: params.userAgent ?? null,
       };
@@ -41,7 +45,10 @@ export class AuditService {
       return await this.databaseService.auditLog.create({ data });
     } catch (error) {
       // On logge l'erreur sans faire échouer l'opération métier principale
-      this.logger.error(`Échec de l'enregistrement de l'audit log: ${error.message}`, error.stack);
+      this.logger.error(
+        `Échec de l'enregistrement de l'audit log: ${error.message}`,
+        error.stack,
+      );
       return null;
     }
   }

@@ -1,13 +1,16 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreateWatchlistDto } from './dto/create-watchlist.dto';
 import { UpdateWatchlistDto } from './dto/update-watchlist.dto';
 
 @Injectable()
 export class WatchlistsService {
-
   constructor(private readonly databaseService: DatabaseService) {}
-
 
   async create(createWatchlistDto: CreateWatchlistDto, userId: string) {
     return this.databaseService.watchlist.create({
@@ -37,34 +40,26 @@ export class WatchlistsService {
     });
   }
 
-  async findOne(
-    userId: string,
-    watchlistId: string,
-  ) {
-    const watchlist =
-      await this.databaseService.watchlist.findUnique({
-        where: {
-          id: watchlistId,
-        },
-        include: {
-          instruments: {
-            include: {
-              instrument: true,
-            },
+  async findOne(userId: string, watchlistId: string) {
+    const watchlist = await this.databaseService.watchlist.findUnique({
+      where: {
+        id: watchlistId,
+      },
+      include: {
+        instruments: {
+          include: {
+            instrument: true,
           },
         },
-      });
+      },
+    });
 
     if (!watchlist) {
-      throw new NotFoundException(
-        'Watchlist introuvable',
-      );
+      throw new NotFoundException('Watchlist introuvable');
     }
 
     if (watchlist.userId !== userId) {
-      throw new ForbiddenException(
-        'Vous n\'avez pas accès à cette watchlist',
-      );
+      throw new ForbiddenException("Vous n'avez pas accès à cette watchlist");
     }
 
     return watchlist;
@@ -85,10 +80,7 @@ export class WatchlistsService {
     });
   }
 
-  async remove(
-    userId: string,
-    watchlistId: string,
-  ) {
+  async remove(userId: string, watchlistId: string) {
     await this.findOne(userId, watchlistId);
 
     await this.databaseService.watchlist.delete({
@@ -113,34 +105,28 @@ export class WatchlistsService {
     await this.findOne(userId, watchlistId);
 
     // Vérifier que l'instrument existe.
-    const instrument =
-      await this.databaseService.instrument.findUnique({
-        where: {
-          id: instrumentId,
-        },
-      });
+    const instrument = await this.databaseService.instrument.findUnique({
+      where: {
+        id: instrumentId,
+      },
+    });
 
     if (!instrument) {
-      throw new NotFoundException(
-        'Instrument introuvable',
-      );
+      throw new NotFoundException('Instrument introuvable');
     }
 
     // Vérifier si l'instrument est déjà présent.
-    const existing =
-      await this.databaseService.watchlistInstrument.findUnique({
-        where: {
-          watchlistId_instrumentId: {
-            watchlistId,
-            instrumentId,
-          },
+    const existing = await this.databaseService.watchlistInstrument.findUnique({
+      where: {
+        watchlistId_instrumentId: {
+          watchlistId,
+          instrumentId,
         },
-      });
+      },
+    });
 
     if (existing) {
-      throw new ConflictException(
-        'Cet instrument est déjà dans la watchlist',
-      );
+      throw new ConflictException('Cet instrument est déjà dans la watchlist');
     }
 
     return this.databaseService.watchlistInstrument.create({
@@ -154,21 +140,17 @@ export class WatchlistsService {
     });
   }
 
-  async getInstruments(
-    userId: string,
-    watchlistId: string,
-  ) {
+  async getInstruments(userId: string, watchlistId: string) {
     await this.findOne(userId, watchlistId);
 
-    const items =
-      await this.databaseService.watchlistInstrument.findMany({
-        where: {
-          watchlistId,
-        },
-        include: {
-          instrument: true,
-        },
-      });
+    const items = await this.databaseService.watchlistInstrument.findMany({
+      where: {
+        watchlistId,
+      },
+      include: {
+        instrument: true,
+      },
+    });
 
     return items.map((item) => item.instrument);
   }
@@ -180,19 +162,18 @@ export class WatchlistsService {
   ) {
     await this.findOne(userId, watchlistId);
 
-    const existing =
-      await this.databaseService.watchlistInstrument.findUnique({
-        where: {
-          watchlistId_instrumentId: {
-            watchlistId,
-            instrumentId,
-          },
+    const existing = await this.databaseService.watchlistInstrument.findUnique({
+      where: {
+        watchlistId_instrumentId: {
+          watchlistId,
+          instrumentId,
         },
-      });
+      },
+    });
 
     if (!existing) {
       throw new NotFoundException(
-        'Cet instrument n\'est pas dans cette watchlist',
+        "Cet instrument n'est pas dans cette watchlist",
       );
     }
 

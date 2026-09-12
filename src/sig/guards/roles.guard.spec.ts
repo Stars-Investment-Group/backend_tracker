@@ -29,19 +29,25 @@ describe('RolesGuard', () => {
   });
 
   it('devrait autoriser si utilisateur a le rôle requis', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([RoleUser.ADMIN]);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([RoleUser.ADMIN]);
     const context = createMockExecutionContext({ role: RoleUser.ADMIN });
     expect(guard.canActivate(context)).toBe(true);
   });
 
   it('devrait refuser si utilisateur a un rôle non autorisé', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([RoleUser.ADMIN]);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([RoleUser.ADMIN]);
     const context = createMockExecutionContext({ role: RoleUser.USER });
     expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
   });
 
   it('devrait refuser si aucun utilisateur attaché à la requête', () => {
-    jest.spyOn(reflector, 'getAllAndOverride').mockReturnValue([RoleUser.ADMIN]);
+    jest
+      .spyOn(reflector, 'getAllAndOverride')
+      .mockReturnValue([RoleUser.ADMIN]);
     const context = createMockExecutionContext(null);
     expect(() => guard.canActivate(context)).toThrow(ForbiddenException);
   });

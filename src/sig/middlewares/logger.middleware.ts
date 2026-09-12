@@ -10,12 +10,16 @@ export class LoggerMiddleware implements NestMiddleware {
 
     const start = Date.now();
 
-    console.log(`[${timestamp}] ${method} ${originalUrl} - ${ip} - ${userAgent}`);
+    console.log(
+      `[${timestamp}] ${method} ${originalUrl} - ${ip} - ${userAgent}`,
+    );
 
     res.on('finish', () => {
       const duration = Date.now() - start;
       const endTimestamp = new Date().toISOString();
-      console.log(`[${endTimestamp}] ${method} ${originalUrl} - ${res.statusCode} (${duration}ms)`);
+      console.log(
+        `[${endTimestamp}] ${method} ${originalUrl} - ${res.statusCode} (${duration}ms)`,
+      );
     });
 
     next();

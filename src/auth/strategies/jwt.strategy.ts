@@ -14,10 +14,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     const secret =
       configService.get<string>('JWT_SECRET') ||
       process.env.JWT_SECRET ||
-      (process.env.NODE_ENV !== 'production' ? 'sig-tracker-dev-secret-key' : undefined);
+      (process.env.NODE_ENV !== 'production'
+        ? 'sig-tracker-dev-secret-key'
+        : undefined);
 
     if (!secret) {
-      throw new Error('FATAL: Variable d\'environnement JWT_SECRET non définie pour la production.');
+      throw new Error(
+        "FATAL: Variable d'environnement JWT_SECRET non définie pour la production.",
+      );
     }
 
     super({
@@ -41,7 +45,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
 
     if (!user) {
-      throw new UnauthorizedException('Utilisateur introuvable ou session expirée');
+      throw new UnauthorizedException(
+        'Utilisateur introuvable ou session expirée',
+      );
     }
 
     if (!user.isActive) {

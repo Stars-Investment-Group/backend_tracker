@@ -22,7 +22,7 @@ export class CreateEconomicEventDto {
   title: string;
 
   @ApiProperty({
-    description: "Code pays ISO 3 lettres (ex: SEN, CIV, USA, EMU)",
+    description: 'Code pays ISO 3 lettres (ex: SEN, CIV, USA, EMU)',
     example: 'CIV',
     maxLength: 3,
   })
@@ -50,7 +50,7 @@ export class CreateEconomicEventDto {
   impact?: EventImpact;
 
   @ApiPropertyOptional({
-    description: "Valeur réelle publiée (si disponible)",
+    description: 'Valeur réelle publiée (si disponible)',
     example: '3.50%',
     maxLength: 50,
   })

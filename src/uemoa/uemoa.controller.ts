@@ -1,5 +1,11 @@
 import { Controller, Get, Post, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { RoleUser } from '@prisma/client';
 import { Public } from '../sig/decorators/public.decorator';
 import { Roles } from '../sig/decorators/roles.decorator';
@@ -16,25 +22,35 @@ export class UemoaController {
   @ApiOperation({
     summary: 'Récupérer les indicateurs économiques UEMOA',
     description:
-      "Retourne les observations économiques stockées en base, triées par série puis par " +
-      "période croissante. Tous les filtres sont optionnels et cumulables. Source : BCEAO " +
-      "via DBnomics, synchronisée automatiquement chaque jour à 6h.",
+      'Retourne les observations économiques stockées en base, triées par série puis par ' +
+      'période croissante. Tous les filtres sont optionnels et cumulables. Source : BCEAO ' +
+      'via DBnomics, synchronisée automatiquement chaque jour à 6h.',
   })
   @ApiQuery({
-    name: 'country', required: false, example: 'SN',
-    description: "Code pays ISO à 2 lettres. Absent pour les séries régionales (ensemble UMOA).",
+    name: 'country',
+    required: false,
+    example: 'SN',
+    description:
+      'Code pays ISO à 2 lettres. Absent pour les séries régionales (ensemble UMOA).',
   })
   @ApiQuery({
-    name: 'dataset', required: false, example: 'TC_A',
-    description: "Jeu de données BCEAO. Ex : TC_A (taux de change annuel), PIBN (PIB nominal).",
+    name: 'dataset',
+    required: false,
+    example: 'TC_A',
+    description:
+      'Jeu de données BCEAO. Ex : TC_A (taux de change annuel), PIBN (PIB nominal).',
   })
   @ApiQuery({
-    name: 'provider', required: false, example: 'BCEAO',
+    name: 'provider',
+    required: false,
+    example: 'BCEAO',
     description: 'Fournisseur de la donnée.',
   })
   @ApiQuery({
-    name: 'seriesCode', required: false, example: 'ZZZSF3100A0GP',
-    description: "Code exact de la série, pour cibler un seul indicateur.",
+    name: 'seriesCode',
+    required: false,
+    example: 'ZZZSF3100A0GP',
+    description: 'Code exact de la série, pour cibler un seul indicateur.',
   })
   @ApiResponse({
     status: 200,
@@ -64,8 +80,8 @@ export class UemoaController {
   @ApiOperation({
     summary: 'Lister les séries disponibles en base',
     description:
-      "Retourne la liste des séries distinctes présentes en base, avec leur date de dernière " +
-      "récupération. Pratique pour alimenter un sélecteur côté interface sans deviner ce qui existe.",
+      'Retourne la liste des séries distinctes présentes en base, avec leur date de dernière ' +
+      'récupération. Pratique pour alimenter un sélecteur côté interface sans deviner ce qui existe.',
   })
   @ApiResponse({
     status: 200,
@@ -93,12 +109,15 @@ export class UemoaController {
   @ApiOperation({
     summary: 'Déclencher manuellement la synchronisation (Admin uniquement)',
     description:
-      "Lance immédiatement le pipeline ETL (extraction DBnomics, transformation, écriture en " +
+      'Lance immédiatement le pipeline ETL (extraction DBnomics, transformation, écriture en ' +
       "base) sans attendre l'exécution planifiée de 6h. L'opération est idempotente : elle met " +
-      "à jour les valeurs existantes au lieu de créer des doublons.",
+      'à jour les valeurs existantes au lieu de créer des doublons.',
   })
   @ApiResponse({ status: 201, description: 'Synchronisation terminée.' })
-  @ApiResponse({ status: 403, description: 'Accès refusé - Rôle Admin requis.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès refusé - Rôle Admin requis.',
+  })
   async triggerSync() {
     await this.uemoaService.syncAll();
     return { message: 'Synchronisation UEMOA terminée.' };

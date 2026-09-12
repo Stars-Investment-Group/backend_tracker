@@ -7,7 +7,10 @@ import {
 import { DatabaseService } from '../database/database.service';
 import { CreatePriceHistoryDto } from './dto/create-price-history.dto';
 import { BulkCreatePriceHistoryDto } from './dto/bulk-create-price-history.dto';
-import { QueryPriceHistoryDto, PriceSortOrder } from './dto/query-price-history.dto';
+import {
+  QueryPriceHistoryDto,
+  PriceSortOrder,
+} from './dto/query-price-history.dto';
 
 @Injectable()
 export class PriceHistoryService {
@@ -24,7 +27,9 @@ export class PriceHistoryService {
     });
 
     if (!instrument) {
-      throw new NotFoundException(`Instrument avec l'ID ${dto.instrumentId} non trouvé.`);
+      throw new NotFoundException(
+        `Instrument avec l'ID ${dto.instrumentId} non trouvé.`,
+      );
     }
 
     const timestamp = new Date(dto.timestamp);
@@ -121,7 +126,9 @@ export class PriceHistoryService {
     });
 
     if (!instrument) {
-      throw new NotFoundException(`Instrument avec l'ID ${instrumentId} non trouvé.`);
+      throw new NotFoundException(
+        `Instrument avec l'ID ${instrumentId} non trouvé.`,
+      );
     }
 
     const where: any = { instrumentId };
@@ -172,7 +179,9 @@ export class PriceHistoryService {
     });
 
     if (!instrument) {
-      throw new NotFoundException(`Instrument avec le ticker "${ticker}" non trouvé.`);
+      throw new NotFoundException(
+        `Instrument avec le ticker "${ticker}" non trouvé.`,
+      );
     }
 
     return this.findByInstrument(instrument.id, query);
@@ -187,7 +196,9 @@ export class PriceHistoryService {
     });
 
     if (!instrument) {
-      throw new NotFoundException(`Instrument avec l'ID ${instrumentId} non trouvé.`);
+      throw new NotFoundException(
+        `Instrument avec l'ID ${instrumentId} non trouvé.`,
+      );
     }
 
     const latest = await this.databaseService.priceHistory.findFirst({
@@ -206,7 +217,9 @@ export class PriceHistoryService {
     });
 
     if (!latest) {
-      throw new NotFoundException(`Aucune cotation trouvée pour l'instrument ${instrument.ticker ?? instrumentId}.`);
+      throw new NotFoundException(
+        `Aucune cotation trouvée pour l'instrument ${instrument.ticker ?? instrumentId}.`,
+      );
     }
 
     return latest;

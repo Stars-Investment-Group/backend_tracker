@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { DatabaseService } from '../database/database.service';
 import { CreatePortfolioDto } from './dto/create-portfolio.dto';
 import { UpdatePortfolioDto } from './dto/update-portfolio.dto';
@@ -32,7 +36,9 @@ export class PortfolioService {
   async findAll(user: any, requestedUserId?: string) {
     let whereCondition: any;
     if (user.role === RoleUser.ADMIN || user.role === RoleUser.ANALYSTE) {
-      whereCondition = requestedUserId ? { userId: requestedUserId } : undefined;
+      whereCondition = requestedUserId
+        ? { userId: requestedUserId }
+        : undefined;
     } else {
       whereCondition = { userId: user.id };
     }
@@ -83,7 +89,9 @@ export class PortfolioService {
       user.role !== RoleUser.ADMIN &&
       user.role !== RoleUser.ANALYSTE
     ) {
-      throw new ForbiddenException('Accès refusé. Ce portefeuille ne vous appartient pas.');
+      throw new ForbiddenException(
+        'Accès refusé. Ce portefeuille ne vous appartient pas.',
+      );
     }
 
     return portfolio;
@@ -93,7 +101,9 @@ export class PortfolioService {
     const existing = await this.findOne(id, user);
 
     if (existing.userId !== user.id && user.role !== RoleUser.ADMIN) {
-      throw new ForbiddenException('Accès refusé. Vous ne pouvez modifier que vos propres portefeuilles.');
+      throw new ForbiddenException(
+        'Accès refusé. Vous ne pouvez modifier que vos propres portefeuilles.',
+      );
     }
 
     return this.databaseService.portfolio.update({
@@ -116,7 +126,9 @@ export class PortfolioService {
     const existing = await this.findOne(id, user);
 
     if (existing.userId !== user.id && user.role !== RoleUser.ADMIN) {
-      throw new ForbiddenException('Accès refusé. Vous ne pouvez supprimer que vos propres portefeuilles.');
+      throw new ForbiddenException(
+        'Accès refusé. Vous ne pouvez supprimer que vos propres portefeuilles.',
+      );
     }
 
     const deleted = await this.databaseService.portfolio.delete({

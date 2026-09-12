@@ -23,14 +23,15 @@ export class NewsService {
 
     // Vérifier l'existence des instruments spécifiés
     if (instrumentIds && instrumentIds.length > 0) {
-      const existingInstruments = await this.databaseService.instrument.findMany({
-        where: { id: { in: instrumentIds } },
-        select: { id: true },
-      });
+      const existingInstruments =
+        await this.databaseService.instrument.findMany({
+          where: { id: { in: instrumentIds } },
+          select: { id: true },
+        });
 
       if (existingInstruments.length !== instrumentIds.length) {
         throw new BadRequestException(
-          'Un ou plusieurs identifiants d\'instruments financiers sont invalides ou introuvables.',
+          "Un ou plusieurs identifiants d'instruments financiers sont invalides ou introuvables.",
         );
       }
     }
@@ -38,13 +39,14 @@ export class NewsService {
     return this.databaseService.newsArticle.create({
       data: {
         ...articleData,
-        instruments: instrumentIds && instrumentIds.length > 0
-          ? {
-              create: instrumentIds.map((instrumentId) => ({
-                instrument: { connect: { id: instrumentId } },
-              })),
-            }
-          : undefined,
+        instruments:
+          instrumentIds && instrumentIds.length > 0
+            ? {
+                create: instrumentIds.map((instrumentId) => ({
+                  instrument: { connect: { id: instrumentId } },
+                })),
+              }
+            : undefined,
       },
       include: {
         instruments: {
@@ -110,7 +112,11 @@ export class NewsService {
   /**
    * Récupérer les actualités par classe d'actifs
    */
-  async getByAssetClass(assetClass: AssetClass, limit: number = 20, offset: number = 0) {
+  async getByAssetClass(
+    assetClass: AssetClass,
+    limit: number = 20,
+    offset: number = 0,
+  ) {
     const [total, data] = await Promise.all([
       this.databaseService.newsArticle.count({
         where: { assetClass },
@@ -179,7 +185,9 @@ export class NewsService {
         some: {
           instrument: {
             ...(instrumentId ? { id: instrumentId } : {}),
-            ...(ticker ? { ticker: { equals: ticker, mode: 'insensitive' } } : {}),
+            ...(ticker
+              ? { ticker: { equals: ticker, mode: 'insensitive' } }
+              : {}),
           },
         },
       };
@@ -268,7 +276,7 @@ export class NewsService {
 
           if (existingInstruments.length !== instrumentIds.length) {
             throw new BadRequestException(
-              'Un ou plusieurs identifiants d\'instruments sont invalides.',
+              "Un ou plusieurs identifiants d'instruments sont invalides.",
             );
           }
         }
@@ -392,7 +400,12 @@ export class NewsService {
     for (const tx of transactions) {
       const key = `${tx.portfolioId}_${tx.instrumentId}`;
       const qty = Number(tx.quantity);
-      const factor = tx.transactionType === 'buy' ? 1 : tx.transactionType === 'sell' ? -1 : 0;
+      const factor =
+        tx.transactionType === 'buy'
+          ? 1
+          : tx.transactionType === 'sell'
+            ? -1
+            : 0;
 
       if (!positionMap.has(key)) {
         positionMap.set(key, {
@@ -421,7 +434,7 @@ export class NewsService {
       sentiment: article.sentiment,
       message: isImpacted
         ? `Cet article concerne ${activePositions.length} position(s) active(s) dans vos portefeuilles.`
-        : "Vous ne détenez actuellement aucune position sur les instruments concernés par cette actualité.",
+        : 'Vous ne détenez actuellement aucune position sur les instruments concernés par cette actualité.',
       article: {
         id: article.id,
         title: article.title,
@@ -446,20 +459,72 @@ export class NewsService {
     let endDate: Date | undefined;
 
     if (period === 'today') {
-      startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
-      endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+      startDate = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          0,
+          0,
+          0,
+        ),
+      );
+      endDate = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          23,
+          59,
+          59,
+          999,
+        ),
+      );
     } else if (period === 'this_week') {
       const day = now.getUTCDay();
       const diffToMonday = (day === 0 ? -6 : 1) - day;
-      startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + diffToMonday, 0, 0, 0));
-      endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + diffToMonday + 6, 23, 59, 59, 999));
+      startDate = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate() + diffToMonday,
+          0,
+          0,
+          0,
+        ),
+      );
+      endDate = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate() + diffToMonday + 6,
+          23,
+          59,
+          59,
+          999,
+        ),
+      );
     } else if (period === 'this_month') {
-      startDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0));
-      endDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 0, 23, 59, 59, 999));
+      startDate = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1, 0, 0, 0),
+      );
+      endDate = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth() + 1,
+          0,
+          23,
+          59,
+          59,
+          999,
+        ),
+      );
     }
 
     const where: Prisma.EconomicEventWhereInput = {
-      ...(startDate && endDate ? { eventDate: { gte: startDate, lte: endDate } } : {}),
+      ...(startDate && endDate
+        ? { eventDate: { gte: startDate, lte: endDate } }
+        : {}),
       ...(country ? { country: { equals: country, mode: 'insensitive' } } : {}),
       ...(impact ? { impact } : {}),
     };
@@ -482,7 +547,14 @@ export class NewsService {
    * Récupérer les événements économiques futurs avec filtres avancés
    */
   async getEconomicEvents(query: QueryEconomicEventDto) {
-    const { country, impact, startDate, endDate, limit = 50, offset = 0 } = query;
+    const {
+      country,
+      impact,
+      startDate,
+      endDate,
+      limit = 50,
+      offset = 0,
+    } = query;
 
     const where: Prisma.EconomicEventWhereInput = {
       ...(country ? { country: { equals: country, mode: 'insensitive' } } : {}),

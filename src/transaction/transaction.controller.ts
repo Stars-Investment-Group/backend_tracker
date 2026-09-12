@@ -11,7 +11,13 @@ import {
 import { TransactionService } from './transaction.service';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CurrentUser } from '../sig/decorators/current-user.decorator';
 
 @ApiTags('Transaction')
@@ -26,9 +32,15 @@ export class TransactionController {
     description: 'Ajoute une nouvelle transaction dans un portfolio',
   })
   @ApiResponse({ status: 201, description: 'Transaction ajoutée avec succès' })
-  @ApiResponse({ status: 400, description: 'Données Invalides ou solde insuffisant' })
+  @ApiResponse({
+    status: 400,
+    description: 'Données Invalides ou solde insuffisant',
+  })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
-  @ApiResponse({ status: 404, description: 'Portfolio ou Instrument introuvable' })
+  @ApiResponse({
+    status: 404,
+    description: 'Portfolio ou Instrument introuvable',
+  })
   create(
     @Body() createTransactionDto: CreateTransactionDto,
     @CurrentUser() user: any,
@@ -39,9 +51,13 @@ export class TransactionController {
   @Get()
   @ApiOperation({
     summary: 'Lister les transactions',
-    description: "Retourne les transactions de l'utilisateur avec filtre optionnel par portfolio",
+    description:
+      "Retourne les transactions de l'utilisateur avec filtre optionnel par portfolio",
   })
-  @ApiResponse({ status: 200, description: 'Liste de transactions retournée avec succès' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste de transactions retournée avec succès',
+  })
   findAll(
     @CurrentUser() user: any,
     @Query('portfolioId') portfolioId?: string,
@@ -54,8 +70,15 @@ export class TransactionController {
     summary: 'Obtenir une transaction par ID',
     description: 'Retourne une transaction spécifique',
   })
-  @ApiParam({ name: 'id', required: true, description: "L'ID de la transaction" })
-  @ApiResponse({ status: 200, description: 'Transaction retournée avec succès' })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: "L'ID de la transaction",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Transaction retournée avec succès',
+  })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Transaction introuvable' })
   findOne(@Param('id') id: string, @CurrentUser() user: any) {
@@ -67,8 +90,15 @@ export class TransactionController {
     summary: 'Mettre à jour une transaction',
     description: "Modifie les informations d'une transaction existante",
   })
-  @ApiParam({ name: 'id', required: true, description: "L'ID de la transaction" })
-  @ApiResponse({ status: 200, description: 'Transaction mise à jour avec succès' })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: "L'ID de la transaction",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Transaction mise à jour avec succès',
+  })
   @ApiResponse({ status: 400, description: 'Données invalides' })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Transaction non trouvée' })
@@ -85,8 +115,15 @@ export class TransactionController {
     summary: 'Supprimer une transaction',
     description: 'Supprime définitivement une transaction',
   })
-  @ApiParam({ name: 'id', required: true, description: "L'ID de la transaction" })
-  @ApiResponse({ status: 200, description: 'Transaction supprimée avec succès' })
+  @ApiParam({
+    name: 'id',
+    required: true,
+    description: "L'ID de la transaction",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Transaction supprimée avec succès',
+  })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Transaction non trouvée' })
   remove(@Param('id') id: string, @CurrentUser() user: any) {

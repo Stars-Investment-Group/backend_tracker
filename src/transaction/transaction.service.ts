@@ -41,7 +41,9 @@ export class TransactionService {
       user.role !== RoleUser.ADMIN &&
       user.role !== RoleUser.ANALYSTE
     ) {
-      throw new ForbiddenException('Accès refusé. Ce portefeuille ne vous appartient pas.');
+      throw new ForbiddenException(
+        'Accès refusé. Ce portefeuille ne vous appartient pas.',
+      );
     }
 
     // Vérifier que l'instrument existe
@@ -159,24 +161,38 @@ export class TransactionService {
       user.role !== RoleUser.ADMIN &&
       user.role !== RoleUser.ANALYSTE
     ) {
-      throw new ForbiddenException('Accès refusé. Cette transaction ne vous appartient pas.');
+      throw new ForbiddenException(
+        'Accès refusé. Cette transaction ne vous appartient pas.',
+      );
     }
 
     return transaction;
   }
 
-  async update(id: string, updateTransactionDto: UpdateTransactionDto, user: any) {
+  async update(
+    id: string,
+    updateTransactionDto: UpdateTransactionDto,
+    user: any,
+  ) {
     const existing = await this.findOne(id, user);
 
     if (existing.portfolio.userId !== user.id && user.role !== RoleUser.ADMIN) {
-      throw new ForbiddenException('Accès refusé. Vous ne pouvez modifier que vos propres transactions.');
+      throw new ForbiddenException(
+        'Accès refusé. Vous ne pouvez modifier que vos propres transactions.',
+      );
     }
 
-    if (updateTransactionDto.quantity !== undefined && updateTransactionDto.quantity <= 0) {
+    if (
+      updateTransactionDto.quantity !== undefined &&
+      updateTransactionDto.quantity <= 0
+    ) {
       throw new BadRequestException('La quantité doit être supérieure à 0');
     }
 
-    if (updateTransactionDto.price !== undefined && updateTransactionDto.price < 0) {
+    if (
+      updateTransactionDto.price !== undefined &&
+      updateTransactionDto.price < 0
+    ) {
       throw new BadRequestException('Le prix ne peut pas être négatif');
     }
 
@@ -186,7 +202,9 @@ export class TransactionService {
       });
       if (!portfolio) throw new NotFoundException('Portfolio introuvable');
       if (portfolio.userId !== user.id && user.role !== RoleUser.ADMIN) {
-        throw new ForbiddenException('Accès refusé. Le portfolio de destination ne vous appartient pas.');
+        throw new ForbiddenException(
+          'Accès refusé. Le portfolio de destination ne vous appartient pas.',
+        );
       }
     }
 
@@ -228,7 +246,9 @@ export class TransactionService {
     const existing = await this.findOne(id, user);
 
     if (existing.portfolio.userId !== user.id && user.role !== RoleUser.ADMIN) {
-      throw new ForbiddenException('Accès refusé. Vous ne pouvez supprimer que vos propres transactions.');
+      throw new ForbiddenException(
+        'Accès refusé. Vous ne pouvez supprimer que vos propres transactions.',
+      );
     }
 
     await this.databaseService.transaction.delete({

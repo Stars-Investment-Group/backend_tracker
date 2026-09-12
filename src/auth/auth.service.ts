@@ -37,7 +37,9 @@ export class AuthService {
     });
 
     if (existing) {
-      throw new ConflictException(`L'adresse email "${dto.email}" est déjà utilisée`);
+      throw new ConflictException(
+        `L'adresse email "${dto.email}" est déjà utilisée`,
+      );
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -63,7 +65,12 @@ export class AuthService {
       action: 'USER_REGISTER',
       entityType: 'User',
       entityId: user.id,
-      newValues: { email: user.email, role: user.role, firstName: user.firstName, lastName: user.lastName },
+      newValues: {
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
       ipAddress,
       userAgent,
     });
@@ -90,10 +97,15 @@ export class AuthService {
     }
 
     if (!user.isActive) {
-      throw new UnauthorizedException('Votre compte a été désactivé. Veuillez contacter un administrateur.');
+      throw new UnauthorizedException(
+        'Votre compte a été désactivé. Veuillez contacter un administrateur.',
+      );
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      dto.password,
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       throw new UnauthorizedException('Email ou mot de passe incorrect');
     }
@@ -127,7 +139,11 @@ export class AuthService {
   /**
    * Renouvellement des tokens (Refresh Token Rotation)
    */
-  async refreshTokens(refreshToken: string, ipAddress?: string, userAgent?: string) {
+  async refreshTokens(
+    refreshToken: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     let payload: JwtPayload;
     const { refreshSecret } = this.getJwtSecrets();
 
@@ -136,7 +152,9 @@ export class AuthService {
         secret: refreshSecret,
       });
     } catch {
-      throw new ForbiddenException('Token de rafraîchissement invalide ou expiré.');
+      throw new ForbiddenException(
+        'Token de rafraîchissement invalide ou expiré.',
+      );
     }
 
     const userId = payload.sub;
@@ -152,7 +170,10 @@ export class AuthService {
       throw new ForbiddenException('Compte désactivé.');
     }
 
-    const isRefreshTokenValid = await bcrypt.compare(refreshToken, user.refreshTokenHash);
+    const isRefreshTokenValid = await bcrypt.compare(
+      refreshToken,
+      user.refreshTokenHash,
+    );
     if (!isRefreshTokenValid) {
       // Possible tentative de rejeu / vol de token : on révoque immédiatement le refresh token
       await this.databaseService.user.update({
@@ -167,7 +188,9 @@ export class AuthService {
         ipAddress,
         userAgent,
       });
-      throw new ForbiddenException('Token de rafraîchissement invalide. Reconnexion requise.');
+      throw new ForbiddenException(
+        'Token de rafraîchissement invalide. Reconnexion requise.',
+      );
     }
 
     const tokens = await this.generateTokens(user.id, user.email, user.role);
@@ -216,7 +239,9 @@ export class AuthService {
     const secret =
       this.configService.get<string>('JWT_SECRET') ||
       process.env.JWT_SECRET ||
-      (process.env.NODE_ENV !== 'production' ? 'sig-tracker-dev-secret-key' : undefined);
+      (process.env.NODE_ENV !== 'production'
+        ? 'sig-tracker-dev-secret-key'
+        : undefined);
 
     const refreshSecret =
       this.configService.get<string>('JWT_REFRESH_SECRET') ||

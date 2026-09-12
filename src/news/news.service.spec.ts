@@ -41,7 +41,9 @@ describe('NewsService', () => {
       count: jest.fn(),
     },
     $transaction: jest.fn((callback: any) =>
-      typeof callback === 'function' ? callback(mockDatabaseService) : Promise.all(callback),
+      typeof callback === 'function'
+        ? callback(mockDatabaseService)
+        : Promise.all(callback),
     ),
   };
 
@@ -56,7 +58,8 @@ describe('NewsService', () => {
   const sampleArticle = {
     id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
     title: 'Hausse historique du cours de Sonatel à la BRVM',
-    content: 'La Sonatel a clôturé en forte hausse suite à ses résultats trimestriels.',
+    content:
+      'La Sonatel a clôturé en forte hausse suite à ses résultats trimestriels.',
     summary: 'Forte progression du titre Sonatel.',
     sentiment: NewsSentiment.positive,
     source: 'Financial Afrik',
@@ -114,7 +117,8 @@ describe('NewsService', () => {
   describe('createArticle', () => {
     const createDto: CreateNewsArticleDto = {
       title: 'Hausse historique du cours de Sonatel à la BRVM',
-      content: 'La Sonatel a clôturé en forte hausse suite à ses résultats trimestriels.',
+      content:
+        'La Sonatel a clôturé en forte hausse suite à ses résultats trimestriels.',
       summary: 'Forte progression du titre Sonatel.',
       sentiment: NewsSentiment.positive,
       source: 'Financial Afrik',
@@ -125,7 +129,9 @@ describe('NewsService', () => {
     };
 
     it('should create an article with instruments when valid', async () => {
-      mockDatabaseService.instrument.findMany.mockResolvedValue([{ id: sampleInstrument.id }]);
+      mockDatabaseService.instrument.findMany.mockResolvedValue([
+        { id: sampleInstrument.id },
+      ]);
       mockDatabaseService.newsArticle.create.mockResolvedValue(sampleArticle);
 
       const result = await service.createArticle(createDto);
@@ -141,14 +147,18 @@ describe('NewsService', () => {
     it('should throw BadRequestException if any instrumentId is invalid', async () => {
       mockDatabaseService.instrument.findMany.mockResolvedValue([]);
 
-      await expect(service.createArticle(createDto)).rejects.toThrow(BadRequestException);
+      await expect(service.createArticle(createDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
   describe('getBreakingNews', () => {
     it('should return breaking news ordered by publishedAt desc', async () => {
       mockDatabaseService.newsArticle.count.mockResolvedValue(1);
-      mockDatabaseService.newsArticle.findMany.mockResolvedValue([sampleArticle]);
+      mockDatabaseService.newsArticle.findMany.mockResolvedValue([
+        sampleArticle,
+      ]);
 
       const result = await service.getBreakingNews(10, 0);
 
@@ -171,7 +181,9 @@ describe('NewsService', () => {
   describe('getMostRead', () => {
     it('should return most read articles', async () => {
       mockDatabaseService.newsArticle.count.mockResolvedValue(1);
-      mockDatabaseService.newsArticle.findMany.mockResolvedValue([sampleArticle]);
+      mockDatabaseService.newsArticle.findMany.mockResolvedValue([
+        sampleArticle,
+      ]);
 
       const result = await service.getMostRead(5, 0);
 
@@ -188,7 +200,9 @@ describe('NewsService', () => {
   describe('getByAssetClass', () => {
     it('should filter articles by asset class', async () => {
       mockDatabaseService.newsArticle.count.mockResolvedValue(1);
-      mockDatabaseService.newsArticle.findMany.mockResolvedValue([sampleArticle]);
+      mockDatabaseService.newsArticle.findMany.mockResolvedValue([
+        sampleArticle,
+      ]);
 
       const result = await service.getByAssetClass(AssetClass.equity, 20, 0);
 
@@ -206,7 +220,9 @@ describe('NewsService', () => {
   describe('searchNews', () => {
     it('should search news with filters', async () => {
       mockDatabaseService.newsArticle.count.mockResolvedValue(1);
-      mockDatabaseService.newsArticle.findMany.mockResolvedValue([sampleArticle]);
+      mockDatabaseService.newsArticle.findMany.mockResolvedValue([
+        sampleArticle,
+      ]);
 
       const query: QueryNewsDto = {
         q: 'Sonatel',
@@ -227,7 +243,9 @@ describe('NewsService', () => {
 
   describe('findOne', () => {
     it('should return article without incrementing views by default', async () => {
-      mockDatabaseService.newsArticle.findUnique.mockResolvedValue(sampleArticle);
+      mockDatabaseService.newsArticle.findUnique.mockResolvedValue(
+        sampleArticle,
+      );
 
       const result = await service.findOne(sampleArticle.id, false);
 
@@ -239,7 +257,10 @@ describe('NewsService', () => {
     });
 
     it('should increment readCount when incrementViews is true', async () => {
-      const updatedArticle = { ...sampleArticle, readCount: sampleArticle.readCount + 1 };
+      const updatedArticle = {
+        ...sampleArticle,
+        readCount: sampleArticle.readCount + 1,
+      };
       mockDatabaseService.newsArticle.update.mockResolvedValue(updatedArticle);
 
       const result = await service.findOne(sampleArticle.id, true);
@@ -255,7 +276,9 @@ describe('NewsService', () => {
     it('should throw NotFoundException if article not found', async () => {
       mockDatabaseService.newsArticle.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne('invalid-id', false)).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('invalid-id', false)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -266,10 +289,18 @@ describe('NewsService', () => {
     };
 
     it('should update article and sync instruments', async () => {
-      mockDatabaseService.newsArticle.findUnique.mockResolvedValue(sampleArticle);
-      mockDatabaseService.instrument.findMany.mockResolvedValue([{ id: sampleInstrument.id }]);
-      mockDatabaseService.newsInstrument.deleteMany.mockResolvedValue({ count: 1 });
-      mockDatabaseService.newsInstrument.createMany.mockResolvedValue({ count: 1 });
+      mockDatabaseService.newsArticle.findUnique.mockResolvedValue(
+        sampleArticle,
+      );
+      mockDatabaseService.instrument.findMany.mockResolvedValue([
+        { id: sampleInstrument.id },
+      ]);
+      mockDatabaseService.newsInstrument.deleteMany.mockResolvedValue({
+        count: 1,
+      });
+      mockDatabaseService.newsInstrument.createMany.mockResolvedValue({
+        count: 1,
+      });
       mockDatabaseService.newsArticle.update.mockResolvedValue({
         ...sampleArticle,
         title: 'Titre Modifié',
@@ -277,7 +308,9 @@ describe('NewsService', () => {
 
       const result = await service.updateArticle(sampleArticle.id, updateDto);
 
-      expect(mockDatabaseService.newsInstrument.deleteMany).toHaveBeenCalledWith({
+      expect(
+        mockDatabaseService.newsInstrument.deleteMany,
+      ).toHaveBeenCalledWith({
         where: { newsId: sampleArticle.id },
       });
       expect(result.title).toBe('Titre Modifié');
@@ -286,7 +319,9 @@ describe('NewsService', () => {
 
   describe('deleteArticle', () => {
     it('should delete article by ID', async () => {
-      mockDatabaseService.newsArticle.findUnique.mockResolvedValue(sampleArticle);
+      mockDatabaseService.newsArticle.findUnique.mockResolvedValue(
+        sampleArticle,
+      );
       mockDatabaseService.newsArticle.delete.mockResolvedValue(sampleArticle);
 
       const result = await service.deleteArticle(sampleArticle.id);
@@ -305,7 +340,9 @@ describe('NewsService', () => {
     const sampleUser = { id: 'user-1111-1111', role: 'USER' };
 
     it('should return impacted positions when user holds linked instruments', async () => {
-      mockDatabaseService.newsArticle.findUnique.mockResolvedValue(sampleArticle);
+      mockDatabaseService.newsArticle.findUnique.mockResolvedValue(
+        sampleArticle,
+      );
       mockDatabaseService.portfolio.findMany.mockResolvedValue([
         { id: 'port-1', name: 'Portefeuille Actions' },
       ]);
@@ -320,7 +357,10 @@ describe('NewsService', () => {
         },
       ]);
 
-      const result = await service.getPortfolioImpact(sampleArticle.id, sampleUser);
+      const result = await service.getPortfolioImpact(
+        sampleArticle.id,
+        sampleUser,
+      );
 
       expect(result.impacted).toBe(true);
       expect(result.impactedPositions.length).toBe(1);
@@ -329,13 +369,18 @@ describe('NewsService', () => {
     });
 
     it('should return non-impacted response if user holds no positions', async () => {
-      mockDatabaseService.newsArticle.findUnique.mockResolvedValue(sampleArticle);
+      mockDatabaseService.newsArticle.findUnique.mockResolvedValue(
+        sampleArticle,
+      );
       mockDatabaseService.portfolio.findMany.mockResolvedValue([
         { id: 'port-1', name: 'Portefeuille Actions' },
       ]);
       mockDatabaseService.transaction.findMany.mockResolvedValue([]);
 
-      const result = await service.getPortfolioImpact(sampleArticle.id, sampleUser);
+      const result = await service.getPortfolioImpact(
+        sampleArticle.id,
+        sampleUser,
+      );
 
       expect(result.impacted).toBe(false);
       expect(result.impactedPositions).toEqual([]);
@@ -344,9 +389,15 @@ describe('NewsService', () => {
 
   describe('economicCalendar', () => {
     it('should return calendar events for this_week', async () => {
-      mockDatabaseService.economicEvent.findMany.mockResolvedValue([sampleEconomicEvent]);
+      mockDatabaseService.economicEvent.findMany.mockResolvedValue([
+        sampleEconomicEvent,
+      ]);
 
-      const result = await service.getEconomicCalendar('this_week', 'CIV', EventImpact.high);
+      const result = await service.getEconomicCalendar(
+        'this_week',
+        'CIV',
+        EventImpact.high,
+      );
 
       expect(mockDatabaseService.economicEvent.findMany).toHaveBeenCalled();
       expect(result.count).toBe(1);
@@ -361,7 +412,9 @@ describe('NewsService', () => {
         impact: EventImpact.high,
       };
 
-      mockDatabaseService.economicEvent.create.mockResolvedValue(sampleEconomicEvent);
+      mockDatabaseService.economicEvent.create.mockResolvedValue(
+        sampleEconomicEvent,
+      );
 
       const result = await service.createEconomicEvent(createDto);
 

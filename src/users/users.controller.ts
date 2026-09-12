@@ -34,14 +34,22 @@ export class UsersController {
   @Roles(RoleUser.ADMIN)
   @ApiOperation({ summary: 'Créer un utilisateur (Admin uniquement)' })
   @ApiResponse({ status: 201, description: 'Utilisateur créé avec succès.' })
-  @ApiResponse({ status: 403, description: 'Accès interdit - Rôle Admin requis.' })
+  @ApiResponse({
+    status: 403,
+    description: 'Accès interdit - Rôle Admin requis.',
+  })
   @ApiResponse({ status: 409, description: 'Email déjà utilisé.' })
   async create(
     @Body() createUserDto: CreateUserDto,
     @CurrentUser('id') actorId: string,
     @Req() req: Request,
   ) {
-    return this.usersService.create(createUserDto, actorId, req.ip, req.get('user-agent'));
+    return this.usersService.create(
+      createUserDto,
+      actorId,
+      req.ip,
+      req.get('user-agent'),
+    );
   }
 
   @Get()
@@ -63,7 +71,9 @@ export class UsersController {
       currentUser.role !== RoleUser.ADMIN &&
       currentUser.role !== RoleUser.ANALYSTE
     ) {
-      throw new ForbiddenException('Accès refusé. Vous ne pouvez consulter que votre propre profil.');
+      throw new ForbiddenException(
+        'Accès refusé. Vous ne pouvez consulter que votre propre profil.',
+      );
     }
     return this.usersService.findOne(id);
   }
@@ -79,14 +89,24 @@ export class UsersController {
     @Req() req: Request,
   ) {
     if (currentUser.id !== id && currentUser.role !== RoleUser.ADMIN) {
-      throw new ForbiddenException('Accès refusé. Vous ne pouvez modifier que votre propre profil.');
+      throw new ForbiddenException(
+        'Accès refusé. Vous ne pouvez modifier que votre propre profil.',
+      );
     }
-    return this.usersService.update(id, updateUserDto, currentUser.id, req.ip, req.get('user-agent'));
+    return this.usersService.update(
+      id,
+      updateUserDto,
+      currentUser.id,
+      req.ip,
+      req.get('user-agent'),
+    );
   }
 
   @Patch(':id/role')
   @Roles(RoleUser.ADMIN)
-  @ApiOperation({ summary: "Modifier le rôle d'un utilisateur (Admin uniquement)" })
+  @ApiOperation({
+    summary: "Modifier le rôle d'un utilisateur (Admin uniquement)",
+  })
   @ApiResponse({ status: 200, description: 'Rôle mis à jour' })
   @ApiResponse({ status: 403, description: 'Accès interdit' })
   async updateRole(
@@ -95,7 +115,13 @@ export class UsersController {
     @CurrentUser('id') actorId: string,
     @Req() req: Request,
   ) {
-    return this.usersService.updateRole(id, dto.role, actorId, req.ip, req.get('user-agent'));
+    return this.usersService.updateRole(
+      id,
+      dto.role,
+      actorId,
+      req.ip,
+      req.get('user-agent'),
+    );
   }
 
   @Delete(':id')

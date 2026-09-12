@@ -12,7 +12,8 @@ async function bootstrap() {
   // 1. Securisation des headers HTTP avec Helmet
   app.use(
     helmet({
-      contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+      contentSecurityPolicy:
+        process.env.NODE_ENV === 'production' ? undefined : false,
       crossOriginEmbedderPolicy: false,
     }),
   );
@@ -63,6 +64,8 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`[INIT] Application demarree sur le port ${port}`);
   console.log(`[INIT] Swagger disponible sur http://localhost:${port}/api`);
-  console.log(`[INIT] Healthcheck disponible sur http://localhost:${port}/health`);
+  console.log(
+    `[INIT] Healthcheck disponible sur http://localhost:${port}/health`,
+  );
 }
 void bootstrap();

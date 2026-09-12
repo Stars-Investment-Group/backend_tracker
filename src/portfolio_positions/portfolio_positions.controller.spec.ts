@@ -21,7 +21,9 @@ describe('PortfolioPositionsController', () => {
       ],
     }).compile();
 
-    controller = module.get<PortfolioPositionsController>(PortfolioPositionsController);
+    controller = module.get<PortfolioPositionsController>(
+      PortfolioPositionsController,
+    );
   });
 
   it('should be defined', () => {

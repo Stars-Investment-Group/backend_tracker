@@ -1,18 +1,17 @@
 import {
-    IsBoolean,
-    IsNotEmpty,
-    IsOptional,
-    IsString,
-    MaxLength,
-  } from 'class-validator';
+  IsBoolean,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
 export class CreateWatchlistDto {
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(100)
+  name: string;
 
-    @IsString()
-    @IsNotEmpty()
-    @MaxLength(100)
-    name: string;
-
-    @IsOptional()
-    @IsBoolean()
-    isActive?: boolean;
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
 }

@@ -69,7 +69,10 @@ describe('NewsController', () => {
 
   describe('getBreakingNews', () => {
     it('should call newsService.getBreakingNews', async () => {
-      mockNewsService.getBreakingNews.mockResolvedValue({ total: 1, data: [sampleArticle] });
+      mockNewsService.getBreakingNews.mockResolvedValue({
+        total: 1,
+        data: [sampleArticle],
+      });
 
       const result = await controller.getBreakingNews(10, 0);
 
@@ -80,7 +83,10 @@ describe('NewsController', () => {
 
   describe('getMostRead', () => {
     it('should call newsService.getMostRead', async () => {
-      mockNewsService.getMostRead.mockResolvedValue({ total: 1, data: [sampleArticle] });
+      mockNewsService.getMostRead.mockResolvedValue({
+        total: 1,
+        data: [sampleArticle],
+      });
 
       const result = await controller.getMostRead(5, 0);
 
@@ -91,11 +97,18 @@ describe('NewsController', () => {
 
   describe('getByAssetClass', () => {
     it('should call newsService.getByAssetClass', async () => {
-      mockNewsService.getByAssetClass.mockResolvedValue({ total: 1, data: [sampleArticle] });
+      mockNewsService.getByAssetClass.mockResolvedValue({
+        total: 1,
+        data: [sampleArticle],
+      });
 
       const result = await controller.getByAssetClass(AssetClass.equity, 20, 0);
 
-      expect(mockNewsService.getByAssetClass).toHaveBeenCalledWith(AssetClass.equity, 20, 0);
+      expect(mockNewsService.getByAssetClass).toHaveBeenCalledWith(
+        AssetClass.equity,
+        20,
+        0,
+      );
       expect(result).toEqual({ total: 1, data: [sampleArticle] });
     });
   });
@@ -103,7 +116,10 @@ describe('NewsController', () => {
   describe('searchNews', () => {
     it('should call newsService.searchNews', async () => {
       const query = { q: 'Sonatel', limit: 10 };
-      mockNewsService.searchNews.mockResolvedValue({ total: 1, data: [sampleArticle] });
+      mockNewsService.searchNews.mockResolvedValue({
+        total: 1,
+        data: [sampleArticle],
+      });
 
       const result = await controller.searchNews(query);
 
@@ -114,11 +130,22 @@ describe('NewsController', () => {
 
   describe('getEconomicCalendar', () => {
     it('should call newsService.getEconomicCalendar', async () => {
-      mockNewsService.getEconomicCalendar.mockResolvedValue({ count: 1, data: [sampleEconomicEvent] });
+      mockNewsService.getEconomicCalendar.mockResolvedValue({
+        count: 1,
+        data: [sampleEconomicEvent],
+      });
 
-      const result = await controller.getEconomicCalendar('this_week', 'CIV', EventImpact.high);
+      const result = await controller.getEconomicCalendar(
+        'this_week',
+        'CIV',
+        EventImpact.high,
+      );
 
-      expect(mockNewsService.getEconomicCalendar).toHaveBeenCalledWith('this_week', 'CIV', EventImpact.high);
+      expect(mockNewsService.getEconomicCalendar).toHaveBeenCalledWith(
+        'this_week',
+        'CIV',
+        EventImpact.high,
+      );
       expect(result).toEqual({ count: 1, data: [sampleEconomicEvent] });
     });
   });
@@ -126,7 +153,10 @@ describe('NewsController', () => {
   describe('getEconomicEvents', () => {
     it('should call newsService.getEconomicEvents', async () => {
       const query = { country: 'CIV', limit: 20 };
-      mockNewsService.getEconomicEvents.mockResolvedValue({ total: 1, data: [sampleEconomicEvent] });
+      mockNewsService.getEconomicEvents.mockResolvedValue({
+        total: 1,
+        data: [sampleEconomicEvent],
+      });
 
       const result = await controller.getEconomicEvents(query);
 
@@ -143,7 +173,9 @@ describe('NewsController', () => {
         eventDate: new Date(),
         impact: EventImpact.high,
       };
-      mockNewsService.createEconomicEvent.mockResolvedValue(sampleEconomicEvent);
+      mockNewsService.createEconomicEvent.mockResolvedValue(
+        sampleEconomicEvent,
+      );
 
       const result = await controller.createEconomicEvent(dto);
 
@@ -157,9 +189,15 @@ describe('NewsController', () => {
       const user = { id: 'user-1' };
       mockNewsService.getPortfolioImpact.mockResolvedValue({ impacted: true });
 
-      const result = await controller.getPortfolioImpact(sampleArticle.id, user);
+      const result = await controller.getPortfolioImpact(
+        sampleArticle.id,
+        user,
+      );
 
-      expect(mockNewsService.getPortfolioImpact).toHaveBeenCalledWith(sampleArticle.id, user);
+      expect(mockNewsService.getPortfolioImpact).toHaveBeenCalledWith(
+        sampleArticle.id,
+        user,
+      );
       expect(result).toEqual({ impacted: true });
     });
   });
@@ -170,7 +208,10 @@ describe('NewsController', () => {
 
       const result = await controller.findOne(sampleArticle.id, 'true');
 
-      expect(mockNewsService.findOne).toHaveBeenCalledWith(sampleArticle.id, true);
+      expect(mockNewsService.findOne).toHaveBeenCalledWith(
+        sampleArticle.id,
+        true,
+      );
       expect(result).toEqual(sampleArticle);
     });
   });
@@ -193,11 +234,17 @@ describe('NewsController', () => {
   describe('updateArticle', () => {
     it('should call newsService.updateArticle', async () => {
       const dto: UpdateNewsArticleDto = { title: 'Titre Modifié' };
-      mockNewsService.updateArticle.mockResolvedValue({ ...sampleArticle, title: 'Titre Modifié' });
+      mockNewsService.updateArticle.mockResolvedValue({
+        ...sampleArticle,
+        title: 'Titre Modifié',
+      });
 
       const result = await controller.updateArticle(sampleArticle.id, dto);
 
-      expect(mockNewsService.updateArticle).toHaveBeenCalledWith(sampleArticle.id, dto);
+      expect(mockNewsService.updateArticle).toHaveBeenCalledWith(
+        sampleArticle.id,
+        dto,
+      );
       expect(result.title).toBe('Titre Modifié');
     });
   });
@@ -208,7 +255,9 @@ describe('NewsController', () => {
 
       const result = await controller.deleteArticle(sampleArticle.id);
 
-      expect(mockNewsService.deleteArticle).toHaveBeenCalledWith(sampleArticle.id);
+      expect(mockNewsService.deleteArticle).toHaveBeenCalledWith(
+        sampleArticle.id,
+      );
       expect(result).toEqual({ success: true });
     });
   });

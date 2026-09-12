@@ -6,7 +6,6 @@ import {
   HttpStatus,
   Post,
   Req,
-  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -44,7 +43,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Connexion utilisateur et émission des tokens' })
   @ApiResponse({ status: 200, description: 'Connexion réussie avec tokens' })
-  @ApiResponse({ status: 401, description: 'Identifiants invalides ou compte désactivé' })
+  @ApiResponse({
+    status: 401,
+    description: 'Identifiants invalides ou compte désactivé',
+  })
   async login(@Body() dto: LoginDto, @Req() req: Request) {
     const ipAddress = req.ip;
     const userAgent = req.get('user-agent');
@@ -56,11 +58,18 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Rafraîchir les tokens via refresh token' })
   @ApiResponse({ status: 200, description: 'Nouveaux tokens générés' })
-  @ApiResponse({ status: 403, description: 'Refresh token invalide ou révoqué' })
+  @ApiResponse({
+    status: 403,
+    description: 'Refresh token invalide ou révoqué',
+  })
   async refresh(@Body() dto: RefreshTokenDto, @Req() req: Request) {
     const ipAddress = req.ip;
     const userAgent = req.get('user-agent');
-    return this.authService.refreshTokens(dto.refreshToken, ipAddress, userAgent);
+    return this.authService.refreshTokens(
+      dto.refreshToken,
+      ipAddress,
+      userAgent,
+    );
   }
 
   @Post('logout')
@@ -78,7 +87,7 @@ export class AuthController {
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: "Récupérer le profil de l'utilisateur connecté" })
   @ApiResponse({ status: 200, description: 'Profil utilisateur' })
-  async getProfile(@CurrentUser() user: any) {
+  getProfile(@CurrentUser() user: any) {
     return {
       success: true,
       user,

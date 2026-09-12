@@ -74,7 +74,11 @@ describe('PriceHistoryController', () => {
         ],
       };
 
-      const expectedResponse = { success: true, message: '1 cotations enregistrées avec succès', count: 1 };
+      const expectedResponse = {
+        success: true,
+        message: '1 cotations enregistrées avec succès',
+        count: 1,
+      };
       mockPriceHistoryService.bulkCreate.mockResolvedValue(expectedResponse);
 
       const result = await controller.bulkCreate(dto);
@@ -87,11 +91,21 @@ describe('PriceHistoryController', () => {
   describe('findByInstrument', () => {
     it('should delegate to service.findByInstrument', async () => {
       const query: QueryPriceHistoryDto = { limit: 10 };
-      const expectedResponse = { total: 1, limit: 10, offset: 0, data: [sampleQuote] };
+      const expectedResponse = {
+        total: 1,
+        limit: 10,
+        offset: 0,
+        data: [sampleQuote],
+      };
 
-      mockPriceHistoryService.findByInstrument.mockResolvedValue(expectedResponse);
+      mockPriceHistoryService.findByInstrument.mockResolvedValue(
+        expectedResponse,
+      );
 
-      const result = await controller.findByInstrument(sampleQuote.instrumentId, query);
+      const result = await controller.findByInstrument(
+        sampleQuote.instrumentId,
+        query,
+      );
 
       expect(mockPriceHistoryService.findByInstrument).toHaveBeenCalledWith(
         sampleQuote.instrumentId,
@@ -104,13 +118,21 @@ describe('PriceHistoryController', () => {
   describe('findByTicker', () => {
     it('should delegate to service.findByTicker', async () => {
       const query: QueryPriceHistoryDto = { limit: 10 };
-      const expectedResponse = { total: 1, limit: 10, offset: 0, data: [sampleQuote] };
+      const expectedResponse = {
+        total: 1,
+        limit: 10,
+        offset: 0,
+        data: [sampleQuote],
+      };
 
       mockPriceHistoryService.findByTicker.mockResolvedValue(expectedResponse);
 
       const result = await controller.findByTicker('AAPL', query);
 
-      expect(mockPriceHistoryService.findByTicker).toHaveBeenCalledWith('AAPL', query);
+      expect(mockPriceHistoryService.findByTicker).toHaveBeenCalledWith(
+        'AAPL',
+        query,
+      );
       expect(result).toEqual(expectedResponse);
     });
   });
@@ -121,19 +143,26 @@ describe('PriceHistoryController', () => {
 
       const result = await controller.getLatestPrice(sampleQuote.instrumentId);
 
-      expect(mockPriceHistoryService.getLatestPrice).toHaveBeenCalledWith(sampleQuote.instrumentId);
+      expect(mockPriceHistoryService.getLatestPrice).toHaveBeenCalledWith(
+        sampleQuote.instrumentId,
+      );
       expect(result).toEqual(sampleQuote);
     });
   });
 
   describe('remove', () => {
     it('should delegate to service.remove', async () => {
-      const expectedResponse = { success: true, message: 'Cotation supprimée avec succès' };
+      const expectedResponse = {
+        success: true,
+        message: 'Cotation supprimée avec succès',
+      };
       mockPriceHistoryService.remove.mockResolvedValue(expectedResponse);
 
       const result = await controller.remove(sampleQuote.id);
 
-      expect(mockPriceHistoryService.remove).toHaveBeenCalledWith(sampleQuote.id);
+      expect(mockPriceHistoryService.remove).toHaveBeenCalledWith(
+        sampleQuote.id,
+      );
       expect(result).toEqual(expectedResponse);
     });
   });

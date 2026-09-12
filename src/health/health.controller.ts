@@ -11,8 +11,9 @@ export class HealthController {
   @Public()
   @Get()
   @ApiOperation({
-    summary: 'Sonde de santé de l\'API (Healthcheck)',
-    description: 'Vérifie l\'état de fonctionnement du serveur et la connectivité à PostgreSQL.',
+    summary: "Sonde de santé de l'API (Healthcheck)",
+    description:
+      "Vérifie l'état de fonctionnement du serveur et la connectivité à PostgreSQL.",
   })
   @ApiResponse({
     status: 200,
@@ -45,8 +46,10 @@ export class HealthController {
         },
       },
       system: {
-        heapUsedMb: Math.round((memoryUsage.heapUsed / 1024 / 1024) * 100) / 100,
-        heapTotalMb: Math.round((memoryUsage.heapTotal / 1024 / 1024) * 100) / 100,
+        heapUsedMb:
+          Math.round((memoryUsage.heapUsed / 1024 / 1024) * 100) / 100,
+        heapTotalMb:
+          Math.round((memoryUsage.heapTotal / 1024 / 1024) * 100) / 100,
       },
     };
   }

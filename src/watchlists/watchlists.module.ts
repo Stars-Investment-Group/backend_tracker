@@ -4,9 +4,9 @@ import { WatchlistsController } from './watchlists.controller';
 import { DatabaseModule } from '../database/database.module';
 
 @Module({
-  imports:[DatabaseModule],
+  imports: [DatabaseModule],
   controllers: [WatchlistsController],
   providers: [WatchlistsService],
-  exports:[WatchlistsService]
+  exports: [WatchlistsService],
 })
 export class WatchlistsModule {}

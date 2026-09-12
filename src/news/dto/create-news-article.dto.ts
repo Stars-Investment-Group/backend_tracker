@@ -25,7 +25,8 @@ export class CreateNewsArticleDto {
 
   @ApiProperty({
     description: "Contenu complet de l'article",
-    example: 'Les indices boursiers de la BRVM ont enregistré une hausse notable ce vendredi...',
+    example:
+      'Les indices boursiers de la BRVM ont enregistré une hausse notable ce vendredi...',
   })
   @IsString()
   @IsNotEmpty()
@@ -33,7 +34,8 @@ export class CreateNewsArticleDto {
 
   @ApiPropertyOptional({
     description: "Résumé concis de l'article généré ou rédigé",
-    example: 'Hausse générale des valeurs bancaires à la BRVM en fin de semaine.',
+    example:
+      'Hausse générale des valeurs bancaires à la BRVM en fin de semaine.',
   })
   @IsOptional()
   @IsString()
@@ -76,7 +78,8 @@ export class CreateNewsArticleDto {
   assetClass?: AssetClass;
 
   @ApiPropertyOptional({
-    description: "Indique s'il s'agit d'une actualité urgente / flash (Breaking News)",
+    description:
+      "Indique s'il s'agit d'une actualité urgente / flash (Breaking News)",
     default: false,
     example: false,
   })
@@ -85,7 +88,8 @@ export class CreateNewsArticleDto {
   isBreaking?: boolean;
 
   @ApiPropertyOptional({
-    description: "Liste des IDs d'instruments financiers rattachés à cette actualité",
+    description:
+      "Liste des IDs d'instruments financiers rattachés à cette actualité",
     type: [String],
     example: ['123e4567-e89b-12d3-a456-426614174000'],
   })

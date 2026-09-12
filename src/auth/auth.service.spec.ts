@@ -5,7 +5,11 @@ import { JwtService } from '@nestjs/jwt';
 import { AuditService } from '../audit/audit.service';
 import { ConfigService } from '@nestjs/config';
 import { RoleUser } from '@prisma/client';
-import { ConflictException, UnauthorizedException, ForbiddenException } from '@nestjs/common';
+import {
+  ConflictException,
+  UnauthorizedException,
+  ForbiddenException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
 describe('AuthService', () => {

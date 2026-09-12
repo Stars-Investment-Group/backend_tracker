@@ -1,4 +1,8 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, RoleUser } from '@prisma/client';
 import { DatabaseService } from '../database/database.service';
 
@@ -60,7 +64,9 @@ export class PortfolioPositionsService {
       user.role !== RoleUser.ADMIN &&
       user.role !== RoleUser.ANALYSTE
     ) {
-      throw new ForbiddenException('Accès refusé. Ce portefeuille ne vous appartient pas.');
+      throw new ForbiddenException(
+        'Accès refusé. Ce portefeuille ne vous appartient pas.',
+      );
     }
 
     return this.databaseService.$queryRaw<

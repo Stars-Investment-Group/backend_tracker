@@ -36,11 +36,15 @@ export class NewsController {
   @Get('breaking')
   @ApiOperation({
     summary: 'Dernières actualités urgentes (Breaking News)',
-    description: 'Retourne la liste des actualités urgentes et prioritaires triées par date de publication décroissante.',
+    description:
+      'Retourne la liste des actualités urgentes et prioritaires triées par date de publication décroissante.',
   })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   @ApiQuery({ name: 'offset', required: false, type: Number, example: 0 })
-  @ApiResponse({ status: 200, description: 'Liste des actualités urgentes retournée avec succès.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des actualités urgentes retournée avec succès.',
+  })
   getBreakingNews(
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
@@ -54,11 +58,15 @@ export class NewsController {
   @Get('most-read')
   @ApiOperation({
     summary: 'Actualités les plus lues (Most-read)',
-    description: 'Retourne les articles d’actualité les plus consultés par les utilisateurs.',
+    description:
+      'Retourne les articles d’actualité les plus consultés par les utilisateurs.',
   })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 10 })
   @ApiQuery({ name: 'offset', required: false, type: Number, example: 0 })
-  @ApiResponse({ status: 200, description: 'Liste des articles populaires retournée avec succès.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des articles populaires retournée avec succès.',
+  })
   getMostRead(
     @Query('limit') limit?: number,
     @Query('offset') offset?: number,
@@ -72,12 +80,20 @@ export class NewsController {
   @Get('asset-class/:assetClass')
   @ApiOperation({
     summary: 'Actualités par classe d’actif',
-    description: 'Retourne les actualités associées à une classe d’actif spécifique (equity, bond, crypto, fx, commodity).',
+    description:
+      'Retourne les actualités associées à une classe d’actif spécifique (equity, bond, crypto, fx, commodity).',
   })
-  @ApiParam({ name: 'assetClass', enum: AssetClass, description: 'Classe d’actif' })
+  @ApiParam({
+    name: 'assetClass',
+    enum: AssetClass,
+    description: 'Classe d’actif',
+  })
   @ApiQuery({ name: 'limit', required: false, type: Number, example: 20 })
   @ApiQuery({ name: 'offset', required: false, type: Number, example: 0 })
-  @ApiResponse({ status: 200, description: 'Actualités par classe d’actif retournées avec succès.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Actualités par classe d’actif retournées avec succès.',
+  })
   getByAssetClass(
     @Param('assetClass') assetClass: AssetClass,
     @Query('limit') limit?: number,
@@ -93,9 +109,13 @@ export class NewsController {
   @Get('search')
   @ApiOperation({
     summary: 'Recherche avancée d’actualités',
-    description: 'Recherche plein texte par mots-clés, ticker d’instrument lié, ID d’instrument, sentiment ou classe d’actif.',
+    description:
+      'Recherche plein texte par mots-clés, ticker d’instrument lié, ID d’instrument, sentiment ou classe d’actif.',
   })
-  @ApiResponse({ status: 200, description: 'Résultats de recherche retournés avec succès.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Résultats de recherche retournés avec succès.',
+  })
   searchNews(@Query() query: QueryNewsDto) {
     return this.newsService.searchNews(query);
   }
@@ -103,12 +123,26 @@ export class NewsController {
   @Get('economic-calendar')
   @ApiOperation({
     summary: 'Calendrier économique (Périodes rapides)',
-    description: 'Retourne les événements économiques du calendrier selon une période prédéfinie (today, this_week, this_month, all).',
+    description:
+      'Retourne les événements économiques du calendrier selon une période prédéfinie (today, this_week, this_month, all).',
   })
-  @ApiQuery({ name: 'period', required: false, enum: ['today', 'this_week', 'this_month', 'all'], example: 'this_week' })
+  @ApiQuery({
+    name: 'period',
+    required: false,
+    enum: ['today', 'this_week', 'this_month', 'all'],
+    example: 'this_week',
+  })
   @ApiQuery({ name: 'country', required: false, type: String, example: 'CIV' })
-  @ApiQuery({ name: 'impact', required: false, enum: EventImpact, example: EventImpact.high })
-  @ApiResponse({ status: 200, description: 'Calendrier économique retourné avec succès.' })
+  @ApiQuery({
+    name: 'impact',
+    required: false,
+    enum: EventImpact,
+    example: EventImpact.high,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Calendrier économique retourné avec succès.',
+  })
   getEconomicCalendar(
     @Query('period') period?: 'today' | 'this_week' | 'this_month' | 'all',
     @Query('country') country?: string,
@@ -120,9 +154,13 @@ export class NewsController {
   @Get('economic-calendar/events')
   @ApiOperation({
     summary: 'Événements économiques futurs avec filtres avancés',
-    description: 'Retourne la liste des indicateurs et annonces macroéconomiques programmés avec filtres de dates et de pays.',
+    description:
+      'Retourne la liste des indicateurs et annonces macroéconomiques programmés avec filtres de dates et de pays.',
   })
-  @ApiResponse({ status: 200, description: 'Événements économiques retournés avec succès.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Événements économiques retournés avec succès.',
+  })
   getEconomicEvents(@Query() query: QueryEconomicEventDto) {
     return this.newsService.getEconomicEvents(query);
   }
@@ -131,9 +169,13 @@ export class NewsController {
   @Roles(RoleUser.ADMIN, RoleUser.ANALYSTE)
   @ApiOperation({
     summary: 'Ajouter un événement économique au calendrier (Admin / Analyste)',
-    description: 'Crée un nouvel événement ou indicateur macro-économique dans le calendrier.',
+    description:
+      'Crée un nouvel événement ou indicateur macro-économique dans le calendrier.',
   })
-  @ApiResponse({ status: 201, description: 'Événement économique créé avec succès.' })
+  @ApiResponse({
+    status: 201,
+    description: 'Événement économique créé avec succès.',
+  })
   @ApiResponse({ status: 400, description: 'Données invalides.' })
   @ApiResponse({ status: 403, description: 'Accès refusé.' })
   createEconomicEvent(@Body() dto: CreateEconomicEventDto) {
@@ -143,7 +185,8 @@ export class NewsController {
   @Get(':id/portfolio-impact')
   @ApiOperation({
     summary: 'Analyse d’impact de l’article sur le portefeuille',
-    description: 'Vérifie si les instruments rattachés à cet article sont détenus dans les portefeuilles de l’utilisateur et retourne l’exposition et le sentiment.',
+    description:
+      'Vérifie si les instruments rattachés à cet article sont détenus dans les portefeuilles de l’utilisateur et retourne l’exposition et le sentiment.',
   })
   @ApiParam({ name: 'id', description: 'UUID de l’article' })
   @ApiResponse({ status: 200, description: 'Impact calculé avec succès.' })
@@ -158,10 +201,16 @@ export class NewsController {
   @Get(':id')
   @ApiOperation({
     summary: 'Détail d’un article d’actualité',
-    description: 'Retourne le contenu complet de l’article et ses instruments liés. Peut incrémenter les vues via ?incrementViews=true.',
+    description:
+      'Retourne le contenu complet de l’article et ses instruments liés. Peut incrémenter les vues via ?incrementViews=true.',
   })
   @ApiParam({ name: 'id', description: 'UUID de l’article' })
-  @ApiQuery({ name: 'incrementViews', required: false, type: Boolean, example: true })
+  @ApiQuery({
+    name: 'incrementViews',
+    required: false,
+    type: Boolean,
+    example: true,
+  })
   @ApiResponse({ status: 200, description: 'Article trouvé.' })
   @ApiResponse({ status: 404, description: 'Article non trouvé.' })
   findOne(
@@ -175,10 +224,14 @@ export class NewsController {
   @Roles(RoleUser.ADMIN, RoleUser.ANALYSTE)
   @ApiOperation({
     summary: 'Publier un article d’actualité (Admin / Analyste)',
-    description: 'Crée un nouvel article d’actualité et l’associe optionnellement à des instruments financiers.',
+    description:
+      'Crée un nouvel article d’actualité et l’associe optionnellement à des instruments financiers.',
   })
   @ApiResponse({ status: 201, description: 'Article publié avec succès.' })
-  @ApiResponse({ status: 400, description: 'Données invalides ou instruments introuvables.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Données invalides ou instruments introuvables.',
+  })
   @ApiResponse({ status: 403, description: 'Accès refusé.' })
   createArticle(@Body() createArticleDto: CreateNewsArticleDto) {
     return this.newsService.createArticle(createArticleDto);
@@ -188,7 +241,8 @@ export class NewsController {
   @Roles(RoleUser.ADMIN, RoleUser.ANALYSTE)
   @ApiOperation({
     summary: 'Mettre à jour un article d’actualité (Admin / Analyste)',
-    description: 'Modifie un article d’actualité existant et actualise ses liaisons d’instruments.',
+    description:
+      'Modifie un article d’actualité existant et actualise ses liaisons d’instruments.',
   })
   @ApiParam({ name: 'id', description: 'UUID de l’article' })
   @ApiResponse({ status: 200, description: 'Article mis à jour avec succès.' })

@@ -19,7 +19,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message: string | object = 'Une erreur interne est survenue sur le serveur.';
+    let message: string | object =
+      'Une erreur interne est survenue sur le serveur.';
     let errorType = 'Internal Server Error';
 
     const requestId =
@@ -44,20 +45,21 @@ export class AllExceptionsFilter implements ExceptionFilter {
       switch (exception.code) {
         case 'P2002': {
           status = HttpStatus.CONFLICT;
-          const target = (exception.meta?.target as string[])?.join(', ') || 'champ unique';
+          const target =
+            (exception.meta?.target as string[])?.join(', ') || 'champ unique';
           message = `Un enregistrement avec cette valeur existe déjà (${target}).`;
           errorType = 'Conflict';
           break;
         }
         case 'P2025': {
           status = HttpStatus.NOT_FOUND;
-          message = 'L\'enregistrement demandé est introuvable.';
+          message = "L'enregistrement demandé est introuvable.";
           errorType = 'Not Found';
           break;
         }
         case 'P2003': {
           status = HttpStatus.BAD_REQUEST;
-          message = 'Violation de contrainte d\'intégrité référentielle.';
+          message = "Violation de contrainte d'intégrité référentielle.";
           errorType = 'Foreign Key Constraint Violation';
           break;
         }

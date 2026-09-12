@@ -17,13 +17,20 @@ export class UsersService {
     private readonly auditService: AuditService,
   ) {}
 
-  async create(createUserDto: CreateUserDto, actorId?: string, ipAddress?: string, userAgent?: string) {
+  async create(
+    createUserDto: CreateUserDto,
+    actorId?: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const existingUser = await this.databaseService.user.findUnique({
       where: { email: createUserDto.email.toLowerCase() },
     });
 
     if (existingUser) {
-      throw new ConflictException(`L'email ${createUserDto.email} est déjà utilisé.`);
+      throw new ConflictException(
+        `L'email ${createUserDto.email} est déjà utilisé.`,
+      );
     }
 
     const hashedPassword = await bcrypt.hash(createUserDto.passwordHash, 10);
@@ -45,7 +52,12 @@ export class UsersService {
       action: 'USER_CREATED',
       entityType: 'User',
       entityId: user.id,
-      newValues: { email: user.email, role: user.role, firstName: user.firstName, lastName: user.lastName },
+      newValues: {
+        email: user.email,
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
       ipAddress,
       userAgent,
     });
@@ -90,8 +102,16 @@ export class UsersService {
     return result;
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto, actorId?: string, ipAddress?: string, userAgent?: string) {
-    const existing = await this.databaseService.user.findUnique({ where: { id } });
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    actorId?: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
+    const existing = await this.databaseService.user.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Utilisateur avec l'ID ${id} non trouvé.`);
     }
@@ -126,8 +146,16 @@ export class UsersService {
       action: 'USER_UPDATED',
       entityType: 'User',
       entityId: id,
-      oldValues: { email: existing.email, role: existing.role, isActive: existing.isActive },
-      newValues: { email: updated.email, role: updated.role, isActive: updated.isActive },
+      oldValues: {
+        email: existing.email,
+        role: existing.role,
+        isActive: existing.isActive,
+      },
+      newValues: {
+        email: updated.email,
+        role: updated.role,
+        isActive: updated.isActive,
+      },
       ipAddress,
       userAgent,
     });
@@ -135,8 +163,16 @@ export class UsersService {
     return updated;
   }
 
-  async updateRole(id: string, role: RoleUser, actorId?: string, ipAddress?: string, userAgent?: string) {
-    const existing = await this.databaseService.user.findUnique({ where: { id } });
+  async updateRole(
+    id: string,
+    role: RoleUser,
+    actorId?: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
+    const existing = await this.databaseService.user.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Utilisateur avec l'ID ${id} non trouvé.`);
     }
@@ -170,8 +206,15 @@ export class UsersService {
     };
   }
 
-  async remove(id: string, actorId?: string, ipAddress?: string, userAgent?: string) {
-    const existing = await this.databaseService.user.findUnique({ where: { id } });
+  async remove(
+    id: string,
+    actorId?: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
+    const existing = await this.databaseService.user.findUnique({
+      where: { id },
+    });
     if (!existing) {
       throw new NotFoundException(`Utilisateur avec l'ID ${id} non trouvé.`);
     }

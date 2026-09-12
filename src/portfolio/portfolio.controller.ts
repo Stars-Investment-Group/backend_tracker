@@ -43,9 +43,13 @@ export class PortfolioController {
   @Get()
   @ApiOperation({
     summary: 'Lister les portefeuilles',
-    description: "Retourne les portefeuilles de l'utilisateur connecté (ou tous pour les Admin/Analystes)",
+    description:
+      "Retourne les portefeuilles de l'utilisateur connecté (ou tous pour les Admin/Analystes)",
   })
-  @ApiResponse({ status: 200, description: 'Liste des portefeuilles retournée avec succès' })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des portefeuilles retournée avec succès',
+  })
   async findAll(@CurrentUser() user: any, @Query('userId') userId?: string) {
     return this.portfolioService.findAll(user, userId);
   }
@@ -53,10 +57,14 @@ export class PortfolioController {
   @Get(':id')
   @ApiOperation({
     summary: 'Obtenir un portefeuille par ID',
-    description: 'Retourne un portefeuille avec ses transactions et son propriétaire',
+    description:
+      'Retourne un portefeuille avec ses transactions et son propriétaire',
   })
   @ApiParam({ name: 'id', required: true, description: "L'ID du portefeuille" })
-  @ApiResponse({ status: 200, description: 'Portefeuille retourné avec succès' })
+  @ApiResponse({
+    status: 200,
+    description: 'Portefeuille retourné avec succès',
+  })
   @ApiResponse({ status: 403, description: 'Accès refusé' })
   @ApiResponse({ status: 404, description: 'Portefeuille non trouvé' })
   async findOne(@Param('id') id: string, @CurrentUser() user: any) {
@@ -69,7 +77,10 @@ export class PortfolioController {
     description: "Modifie les informations d'un portefeuille existant.",
   })
   @ApiParam({ name: 'id', required: true, description: "L'ID du portefeuille" })
-  @ApiResponse({ status: 200, description: 'Portefeuille mis à jour avec succès.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Portefeuille mis à jour avec succès.',
+  })
   @ApiResponse({ status: 400, description: 'Données invalides.' })
   @ApiResponse({ status: 403, description: 'Accès refusé.' })
   @ApiResponse({ status: 404, description: 'Portefeuille non trouvé.' })
@@ -87,7 +98,10 @@ export class PortfolioController {
     description: 'Supprime un portefeuille.',
   })
   @ApiParam({ name: 'id', required: true, description: "L'ID du portefeuille" })
-  @ApiResponse({ status: 200, description: 'Portefeuille supprimé avec succès.' })
+  @ApiResponse({
+    status: 200,
+    description: 'Portefeuille supprimé avec succès.',
+  })
   @ApiResponse({ status: 403, description: 'Accès refusé.' })
   @ApiResponse({ status: 404, description: 'Portefeuille non trouvé.' })
   async remove(@Param('id') id: string, @CurrentUser() user: any) {

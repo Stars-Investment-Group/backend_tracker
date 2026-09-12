@@ -25,8 +25,18 @@ interface SeriesConfig {
 }
 
 const SERIES_TO_SYNC: SeriesConfig[] = [
-  { provider: 'BCEAO', dataset: 'TC_A', seriesCode: 'ZZZSF3100A0GP', country: null },
-  { provider: 'BCEAO', dataset: 'PIBN', seriesCode: 'KKKSR1015A0BP', country: 'SN' },
+  {
+    provider: 'BCEAO',
+    dataset: 'TC_A',
+    seriesCode: 'ZZZSF3100A0GP',
+    country: null,
+  },
+  {
+    provider: 'BCEAO',
+    dataset: 'PIBN',
+    seriesCode: 'KKKSR1015A0BP',
+    country: 'SN',
+  },
 ];
 
 @Injectable()
@@ -58,7 +68,14 @@ export class UemoaService {
       this.logger.warn('Aucune série trouvée dans la réponse DBnomics');
       return [];
     }
-    const { provider_code, dataset_code, series_code, series_name, period, value } = doc;
+    const {
+      provider_code,
+      dataset_code,
+      series_code,
+      series_name,
+      period,
+      value,
+    } = doc;
     return period.map((p: string, index: number) => ({
       provider: provider_code,
       dataset: dataset_code,
@@ -103,7 +120,9 @@ export class UemoaService {
       savedCount++;
     }
 
-    this.logger.log(`${savedCount} indicateurs sauvegardés dans economic_indicators`);
+    this.logger.log(
+      `${savedCount} indicateurs sauvegardés dans economic_indicators`,
+    );
     return savedCount;
   }
 
@@ -124,7 +143,9 @@ export class UemoaService {
    * Synchronise toutes les séries configurées (SERIES_TO_SYNC).
    */
   async syncAll(): Promise<void> {
-    this.logger.log(`Démarrage de la synchronisation de ${SERIES_TO_SYNC.length} série(s)...`);
+    this.logger.log(
+      `Démarrage de la synchronisation de ${SERIES_TO_SYNC.length} série(s)...`,
+    );
 
     for (const config of SERIES_TO_SYNC) {
       try {
@@ -134,7 +155,9 @@ export class UemoaService {
           config.seriesCode,
           config.country,
         );
-        this.logger.log(`OK ${config.provider}/${config.dataset}/${config.seriesCode} : ${count} lignes`);
+        this.logger.log(
+          `OK ${config.provider}/${config.dataset}/${config.seriesCode} : ${count} lignes`,
+        );
       } catch (error) {
         this.logger.error(
           `ECHEC ${config.provider}/${config.dataset}/${config.seriesCode} : ${error.message}`,

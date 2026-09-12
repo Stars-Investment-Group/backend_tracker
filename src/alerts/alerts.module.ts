@@ -7,6 +7,6 @@ import { DatabaseModule } from '../database/database.module';
   imports: [DatabaseModule],
   controllers: [AlertsController],
   providers: [AlertsService],
-  exports: [AlertsService]
+  exports: [AlertsService],
 })
 export class AlertsModule {}
