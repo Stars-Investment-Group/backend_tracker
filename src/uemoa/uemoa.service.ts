@@ -2,8 +2,10 @@ import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { Prisma } from '@prisma/client';
 import { DatabaseService } from '../database/database.service';
 import { FindIndicatorsDto } from './dto/find-indicators.dto';
+import { SERIES_TO_SYNC } from './series.config';
 
 const DBNOMICS_BASE_URL = 'https://api.db.nomics.world/v22';
 
@@ -14,20 +16,14 @@ export interface TransformedIndicator {
   seriesName: string;
   country: string | null;
   period: string;
-  value: number;
+  value: number | null;
 }
 
-interface SeriesConfig {
-  provider: string;
-  dataset: string;
-  seriesCode: string;
-  country: string | null;
+export interface LoadResult {
+  crees: number;
+  revises: number;
+  inchanges: number;
 }
-
-const SERIES_TO_SYNC: SeriesConfig[] = [
-  { provider: 'BCEAO', dataset: 'TC_A', seriesCode: 'ZZZSF3100A0GP', country: null },
-  { provider: 'BCEAO', dataset: 'PIBN', seriesCode: 'KKKSR1015A0BP', country: 'SN' },
-];
 
 @Injectable()
 export class UemoaService {
@@ -66,45 +62,145 @@ export class UemoaService {
       seriesName: series_name,
       country,
       period: p,
-      value: value[index],
+      value: this.toNumber(value[index]),
     }));
+  }
+
+  /**
+   * DBnomics represente les valeurs manquantes par la chaine "NA".
+   * Toute valeur non numerique est convertie en null et sera ecartee au chargement.
+   */
+  private toNumber(v: unknown): number | null {
+    if (v === null || v === undefined) return null;
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
   }
 
   // ---------- LOAD ----------
 
-  async saveIndicators(rows: TransformedIndicator[]): Promise<number> {
-    let savedCount = 0;
+  /**
+   * LOAD avec gestion des millesimes, optimise pour limiter les allers-retours.
+   *
+   * Au lieu d'interroger la base pour chaque observation, on charge en une seule
+   * requete toutes les valeurs courantes de la serie, on compare en memoire, puis
+   * on ecrit de facon groupee. On passe d'environ 130 requetes par serie a 3 ou 4.
+   *
+   * Trois cas, inchanges sur le fond :
+   *   1. Aucune valeur connue -> creation d'une premiere version
+   *   2. Valeur identique     -> aucune nouvelle ligne, lastSeenAt rafraichi en lot
+   *   3. Valeur revisee       -> ancienne version archivee, nouvelle version creee
+   */
+  async saveIndicators(rows: TransformedIndicator[]): Promise<LoadResult> {
+    const res: LoadResult = { crees: 0, revises: 0, inchanges: 0 };
+    if (rows.length === 0) return res;
 
-    for (const row of rows) {
-      await this.db.economicIndicator.upsert({
-        where: {
-          provider_dataset_seriesCode_period: {
-            provider: row.provider,
-            dataset: row.dataset,
-            seriesCode: row.seriesCode,
-            period: row.period,
-          },
-        },
-        update: {
-          value: row.value,
-          seriesName: row.seriesName,
-          fetchedAt: new Date(),
-        },
-        create: {
+    const maintenant = new Date();
+    const aujourdhui = new Date();
+    aujourdhui.setUTCHours(0, 0, 0, 0);
+
+    // Seules les observations numeriques sont exploitables
+    const valides = rows.filter(
+      (r) => r.value !== null && typeof r.value === 'number' && Number.isFinite(r.value),
+    );
+    if (valides.length === 0) return res;
+
+    const { provider, dataset, seriesCode } = valides[0];
+
+    // 1 requete : toutes les versions courantes de cette serie
+    const existantes = await this.db.economicIndicator.findMany({
+      where: { provider, dataset, seriesCode, isLatest: true },
+      select: { id: true, period: true, value: true },
+    });
+    const parPeriode = new Map(existantes.map((e) => [e.period, e]));
+
+    const aCreer: any[] = [];
+    const aArchiver: string[] = [];
+    const inchangees: string[] = [];
+
+    for (const row of valides) {
+      const courant = parPeriode.get(row.period);
+
+      if (!courant) {
+        aCreer.push({
           provider: row.provider,
           dataset: row.dataset,
           seriesCode: row.seriesCode,
           seriesName: row.seriesName,
           country: row.country,
           period: row.period,
-          value: row.value,
-        },
+          value: row.value as number,
+          vintageDate: aujourdhui,
+          isLatest: true,
+          lastSeenAt: maintenant,
+        });
+        res.crees++;
+        continue;
+      }
+
+      if (courant.value === row.value) {
+        inchangees.push(courant.id);
+        res.inchanges++;
+        continue;
+      }
+
+      aArchiver.push(courant.id);
+      aCreer.push({
+        provider: row.provider,
+        dataset: row.dataset,
+        seriesCode: row.seriesCode,
+        seriesName: row.seriesName,
+        country: row.country,
+        period: row.period,
+        value: row.value as number,
+        vintageDate: aujourdhui,
+        isLatest: true,
+        lastSeenAt: maintenant,
       });
-      savedCount++;
+      this.logger.log(
+        `Revision ${row.seriesCode} ${row.period} : ${courant.value} -> ${row.value}`,
+      );
+      res.revises++;
     }
 
-    this.logger.log(`${savedCount} indicateurs sauvegardés dans economic_indicators`);
-    return savedCount;
+    // Ecritures groupees, dans une transaction pour garantir la coherence
+    const operations: Prisma.PrismaPromise<unknown>[] = [];
+
+    if (aArchiver.length > 0) {
+      operations.push(
+        this.db.economicIndicator.updateMany({
+          where: { id: { in: aArchiver } },
+          data: { isLatest: false },
+        }),
+      );
+    }
+
+    if (aCreer.length > 0) {
+      operations.push(
+        this.db.economicIndicator.createMany({
+          data: aCreer,
+          skipDuplicates: true,
+        }),
+      );
+    }
+
+    if (inchangees.length > 0) {
+      operations.push(
+        this.db.economicIndicator.updateMany({
+          where: { id: { in: inchangees } },
+          data: { lastSeenAt: maintenant },
+        }),
+      );
+    }
+
+    if (operations.length > 0) {
+      await this.db.$transaction(operations);
+    }
+
+    this.logger.log(
+      `${res.crees} creees, ${res.revises} revisees, ${res.inchanges} inchangees`,
+    );
+    return res;
   }
 
   // ---------- PIPELINE ----------
@@ -114,7 +210,7 @@ export class UemoaService {
     dataset: string,
     seriesCode: string,
     country: string | null = null,
-  ): Promise<number> {
+  ): Promise<LoadResult> {
     const raw = await this.fetchSeries(provider, dataset, seriesCode);
     const rows = this.transformSeries(raw, country);
     return this.saveIndicators(rows);
@@ -134,7 +230,9 @@ export class UemoaService {
           config.seriesCode,
           config.country,
         );
-        this.logger.log(`OK ${config.provider}/${config.dataset}/${config.seriesCode} : ${count} lignes`);
+        this.logger.log(
+          `OK ${config.seriesCode} : ${count.crees} creees, ${count.revises} revisees, ${count.inchanges} inchangees`,
+        );
       } catch (error) {
         this.logger.error(
           `ECHEC ${config.provider}/${config.dataset}/${config.seriesCode} : ${error.message}`,
@@ -158,9 +256,11 @@ export class UemoaService {
     if (filters.provider) where.provider = filters.provider;
     if (filters.seriesCode) where.seriesCode = filters.seriesCode;
 
+    if (!filters.includeRevisions) where.isLatest = true;
+
     return this.db.economicIndicator.findMany({
       where,
-      orderBy: [{ seriesCode: 'asc' }, { period: 'asc' }],
+      orderBy: [{ seriesCode: 'asc' }, { period: 'asc' }, { vintageDate: 'desc' }],
     });
   }
 
@@ -170,6 +270,7 @@ export class UemoaService {
    */
   async listAvailableSeries() {
     const rows = await this.db.economicIndicator.findMany({
+      where: { isLatest: true },
       distinct: ['provider', 'dataset', 'seriesCode'],
       select: {
         provider: true,
@@ -177,11 +278,35 @@ export class UemoaService {
         seriesCode: true,
         seriesName: true,
         country: true,
-        fetchedAt: true,
+        vintageDate: true,
+        lastSeenAt: true,
       },
       orderBy: { seriesCode: 'asc' },
     });
     return rows;
+  }
+
+  /**
+   * Historique complet des revisions d'une observation precise.
+   * Alimente le bloc "Revision History" des maquettes.
+   */
+  async getRevisionHistory(
+    provider: string,
+    dataset: string,
+    seriesCode: string,
+    period: string,
+  ) {
+    return this.db.economicIndicator.findMany({
+      where: { provider, dataset, seriesCode, period },
+      orderBy: { vintageDate: 'desc' },
+      select: {
+        period: true,
+        value: true,
+        vintageDate: true,
+        isLatest: true,
+        lastSeenAt: true,
+      },
+    });
   }
 
   // ---------- ORDONNANCEMENT ----------
