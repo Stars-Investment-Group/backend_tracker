@@ -310,3 +310,44 @@ model EconomicEvent {
   @@map("economic_events")
 }
 
+model Country {
+  code        String   @id @db.VarChar(3)
+  name        String   @db.VarChar(100)
+  region      String?  @db.VarChar(50)
+  subregion   String?  @db.VarChar(50)
+  incomeLevel String?  @map("income_level") @db.VarChar(20)
+  currency    String?  @db.VarChar(3)
+  latitude    Decimal? @db.Decimal(10, 6)
+  longitude   Decimal? @db.Decimal(10, 6)
+  flagUrl     String?  @map("flag_url") @db.VarChar(255)
+  isAggregate Boolean  @default(false) @map("is_aggregate")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([region], name: "idx_countries_region")
+  @@index([incomeLevel], name: "idx_countries_income")
+  @@map("countries")
+}
+
+model MacroIndicator {
+  id                   String    @id @default(uuid()) @db.Uuid
+  code                 String    @unique @db.VarChar(50)
+  name                 String    @db.VarChar(255)
+  description          String?   @db.Text
+  category             String?   @db.VarChar(50)
+  unit                 String?   @db.VarChar(20)
+  frequency             String?   @db.VarChar(20)
+  source                String?   @db.VarChar(100)
+  isSeasonallyAdjusted Boolean   @default(false) @map("is_seasonally_adjusted")
+  coverageStart        DateTime? @map("coverage_start") @db.Date
+  coverageEnd          DateTime? @map("coverage_end") @db.Date
+  metadata              Json?    @default("{}")
+
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([category], name: "idx_indicators_category")
+  @@map("macro_indicators")
+}
+

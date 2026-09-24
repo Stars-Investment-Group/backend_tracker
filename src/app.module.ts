@@ -22,6 +22,8 @@ import { AlertsModule } from './alerts/alerts.module';
 import { WatchlistsModule } from './watchlists/watchlists.module';
 import { NewsModule } from './news/news.module';
 import { HealthModule } from './health/health.module';
+import { CountriesModule } from './countries/countries.module';
+import { IndicatorsModule } from './indicators/indicators.module';
 
 @Module({
   imports: [
@@ -52,6 +54,8 @@ import { HealthModule } from './health/health.module';
     }),
     AlertsModule,
     WatchlistsModule,
+    CountriesModule,
+    IndicatorsModule,
   ],
   controllers: [AppController],
   providers: [
