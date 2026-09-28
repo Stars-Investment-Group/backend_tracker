@@ -322,6 +322,9 @@ model Country {
   flagUrl     String?  @map("flag_url") @db.VarChar(255)
   isAggregate Boolean  @default(false) @map("is_aggregate")
 
+  macroData     MacroData[]
+  macroRegimes  MacroRegime[]
+
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
@@ -343,11 +346,79 @@ model MacroIndicator {
   coverageStart        DateTime? @map("coverage_start") @db.Date
   coverageEnd          DateTime? @map("coverage_end") @db.Date
   metadata              Json?    @default("{}")
+  macroData            MacroData[]
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   @@index([category], name: "idx_indicators_category")
   @@map("macro_indicators")
+}
+
+model MacroData {
+  id              String   @id @default(uuid()) @db.Uuid
+
+  countryCode     String   @map("country_code") @db.VarChar(3)
+  indicatorId     String   @map("indicator_id") @db.Uuid
+
+  vintageDate     DateTime @map("vintage_date") @db.Date
+  period          DateTime @db.Date
+
+  value           Decimal  @db.Decimal(20, 6)
+
+  isForecast      Boolean  @default(false) @map("is_forecast")
+  isEstimate      Boolean  @default(false) @map("is_estimate")
+
+  releaseDate     DateTime? @map("release_date") @db.Date
+  nextReleaseDate DateTime? @map("next_release_date") @db.Date
+
+  source          String?  @db.VarChar(100)
+
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  country         Country        @relation(fields: [countryCode], references: [code])
+  indicator       MacroIndicator @relation(fields: [indicatorId], references: [id])
+
+  @@unique([countryCode, indicatorId, period, vintageDate],name: "uq_macro_data_country_indicator_period_vintage")
+
+  @@index([countryCode, indicatorId],name: "idx_macro_data_country_indicator")
+
+  @@index([period(sort: Desc)],name: "idx_macro_data_period")
+
+  @@index([vintageDate(sort: Desc)],name: "idx_macro_data_vintage")
+
+  @@map("macro_data")
+}
+
+model MacroRegime {
+  id              String   @id @default(uuid()) @db.Uuid
+
+  countryCode     String   @map("country_code") @db.VarChar(3)
+
+  regime          String   @db.VarChar(50)
+  momentum        String?  @db.VarChar(20)
+
+  confidence      Decimal? @db.Decimal(5, 2)
+  riskScore       Decimal? @map("risk_score") @db.Decimal(5, 2)
+  growthScore     Decimal? @map("growth_score") @db.Decimal(5, 2)
+  inflationScore  Decimal? @map("inflation_score") @db.Decimal(5, 2)
+
+  policyStance    String?  @map("policy_stance") @db.VarChar(50)
+
+  period          DateTime @db.Date
+  validFrom       DateTime @map("valid_from") @db.Date
+  validTo         DateTime? @map("valid_to") @db.Date
+
+  metadata        Json? @default("{}")
+
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  country         Country @relation(fields: [countryCode],references: [code])
+
+  @@index([countryCode, validFrom(sort: Desc)],name: "idx_regimes_country")
+
+  @@index([regime],name: "idx_regimes_regime" )
+
+  @@map("macro_regimes")
 }
 

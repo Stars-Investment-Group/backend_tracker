@@ -24,6 +24,8 @@ import { NewsModule } from './news/news.module';
 import { HealthModule } from './health/health.module';
 import { CountriesModule } from './countries/countries.module';
 import { IndicatorsModule } from './indicators/indicators.module';
+import { MacroDataModule } from './macro_data/macro_data.module';
+import { MacroRegimeModule } from './macro-regime/macro-regime.module';
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { IndicatorsModule } from './indicators/indicators.module';
     WatchlistsModule,
     CountriesModule,
     IndicatorsModule,
+    MacroDataModule,
+    MacroRegimeModule,
   ],
   controllers: [AppController],
   providers: [
