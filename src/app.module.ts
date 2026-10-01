@@ -26,6 +26,8 @@ import { CountriesModule } from './countries/countries.module';
 import { IndicatorsModule } from './indicators/indicators.module';
 import { MacroDataModule } from './macro_data/macro_data.module';
 import { MacroRegimeModule } from './macro-regime/macro-regime.module';
+import { CountryRatingModule } from './country-rating/country-rating.module';
+import { CountryScreenerModule } from './country-screener/country-screener.module';
 
 @Module({
   imports: [
@@ -60,6 +62,8 @@ import { MacroRegimeModule } from './macro-regime/macro-regime.module';
     IndicatorsModule,
     MacroDataModule,
     MacroRegimeModule,
+    CountryRatingModule,
+    CountryScreenerModule,
   ],
   controllers: [AppController],
   providers: [
