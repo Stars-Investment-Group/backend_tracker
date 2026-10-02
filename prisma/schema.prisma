@@ -453,3 +453,48 @@ model CountryRating {
     @@map("country_ratings")
   }
 
+  model GlobalKpi {
+  id            String   @id @default(uuid()) @db.Uuid
+  kpiCode       String   @map("kpi_code") @db.VarChar(50)
+  kpiName       String   @map("kpi_name") @db.VarChar(100)
+  value         Decimal  @db.Decimal(10, 4)
+  previousValue Decimal? @map("previous_value") @db.Decimal(10, 4)
+  change        Decimal? @db.Decimal(10, 4)
+  changeType    String?  @map("change_type") @db.VarChar(20)
+  unit          String?  @db.VarChar(20)
+  period        DateTime @db.Date
+  metadata      Json     @default("{}")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([kpiCode, period])
+  @@map("global_kpis")
+}
+
+model HouseView {
+  id              String   @id @default(uuid()) @db.Uuid
+  title           String?  @db.VarChar(255)
+  narrative       String?
+  outlook         String?  @db.VarChar(20)
+  scores          Json?
+  regionBreakdown Json?    @map("region_breakdown")
+  period          DateTime @db.Date
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("house_view")
+}
+
+model RegionSnapshot {
+  id            String   @id @default(uuid()) @db.Uuid
+  regionCode    String   @map("region_code") @db.VarChar(20)
+  regionName    String   @map("region_name") @db.VarChar(100)
+  overallScore  Decimal? @map("overall_score") @db.Decimal(5, 2)
+  momentum      String?  @db.VarChar(20)
+  riskScore     Decimal? @map("risk_score") @db.Decimal(5, 2)
+  pillarScores  Json?    @map("pillar_scores")
+  period        DateTime @db.Date
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([regionCode, period])
+  @@map("region_snapshots")
+}
+

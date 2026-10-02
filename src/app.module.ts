@@ -28,6 +28,8 @@ import { MacroDataModule } from './macro_data/macro_data.module';
 import { MacroRegimeModule } from './macro-regime/macro-regime.module';
 import { CountryRatingModule } from './country-rating/country-rating.module';
 import { CountryScreenerModule } from './country-screener/country-screener.module';
+import { GlobalKpiModule } from './global-kpi/global-kpi.module';
+import { RegionsModule } from './regions/regions.module';
 
 @Module({
   imports: [
@@ -64,6 +66,8 @@ import { CountryScreenerModule } from './country-screener/country-screener.modul
     MacroRegimeModule,
     CountryRatingModule,
     CountryScreenerModule,
+    GlobalKpiModule,
+    RegionsModule,
   ],
   controllers: [AppController],
   providers: [
