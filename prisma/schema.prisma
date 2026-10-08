@@ -325,6 +325,8 @@ model Country {
   macroData     MacroData[]
   macroRegimes  MacroRegime[]
   countryRatings CountryRating[]
+  events       Event[]
+  dataReleases DataRelease[]
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -348,6 +350,7 @@ model MacroIndicator {
   coverageEnd          DateTime? @map("coverage_end") @db.Date
   metadata              Json?    @default("{}")
   macroData            MacroData[]
+  dataReleases DataRelease[]
 
   createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -496,5 +499,57 @@ model RegionSnapshot {
 
   @@unique([regionCode, period])
   @@map("region_snapshots")
+}
+
+model Event {
+  id          String   @id @default(uuid()) @db.Uuid
+  eventType   String   @map("event_type") @db.VarChar(50)
+  title       String   @db.VarChar(255)
+  description String?  @db.Text
+
+  countryCode String?  @map("country_code") @db.VarChar(3)
+  regionCode  String?  @map("region_code") @db.VarChar(20)
+
+  eventDate   DateTime @map("event_date") @db.Date
+  eventTime   DateTime? @map("event_time") @db.Time
+  impact      String?  @db.VarChar(20)
+  importance  Int?
+  source      String?  @db.VarChar(100)
+
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  country     Country? @relation(fields: [countryCode], references: [code])
+
+  @@index([eventDate], name: "idx_events_date")
+  @@index([regionCode], name: "idx_events_region")
+  @@index([impact], name: "idx_events_impact")
+
+  @@map("events")
+}
+
+model DataRelease {
+  id            String   @id @default(uuid()) @db.Uuid
+
+  indicatorId   String   @map("indicator_id") @db.Uuid
+  countryCode   String   @map("country_code") @db.VarChar(3)
+
+  releaseDate   DateTime @map("release_date") @db.Date
+  period        DateTime @db.Date
+
+  status        String?  @db.VarChar(20)
+
+  actualValue   Decimal? @map("actual_value") @db.Decimal(20, 6)
+  previousValue Decimal? @map("previous_value") @db.Decimal(20, 6)
+
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  indicator     MacroIndicator @relation(fields: [indicatorId], references: [id])
+  country       Country        @relation(fields: [countryCode], references: [code])
+
+  @@index([releaseDate], name: "idx_data_releases_date")
+  @@index([indicatorId], name: "idx_data_releases_indicator")
+  @@index([countryCode], name: "idx_data_releases_country")
+
+  @@map("data_releases")
 }
 

@@ -30,6 +30,7 @@ import { CountryRatingModule } from './country-rating/country-rating.module';
 import { CountryScreenerModule } from './country-screener/country-screener.module';
 import { GlobalKpiModule } from './global-kpi/global-kpi.module';
 import { RegionsModule } from './regions/regions.module';
+import { CalendarModule } from './calendar/calendar.module';
 
 @Module({
   imports: [
@@ -68,6 +69,7 @@ import { RegionsModule } from './regions/regions.module';
     CountryScreenerModule,
     GlobalKpiModule,
     RegionsModule,
+    CalendarModule,
   ],
   controllers: [AppController],
   providers: [
