@@ -31,6 +31,7 @@ import { CountryScreenerModule } from './country-screener/country-screener.modul
 import { GlobalKpiModule } from './global-kpi/global-kpi.module';
 import { RegionsModule } from './regions/regions.module';
 import { CalendarModule } from './calendar/calendar.module';
+import { DataExplorerModule } from './data-explorer/data-explorer.module';
 
 @Module({
   imports: [
@@ -70,6 +71,7 @@ import { CalendarModule } from './calendar/calendar.module';
     GlobalKpiModule,
     RegionsModule,
     CalendarModule,
+    DataExplorerModule,
   ],
   controllers: [AppController],
   providers: [
