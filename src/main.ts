@@ -34,11 +34,24 @@ async function bootstrap() {
   );
 
   // 4. Activation de CORS securise
+  {/*
   app.enableCors({
     origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
+  */}
+    // 4. Activation de CORS
+    const corsOrigin = process.env.CORS_ORIGIN?.trim();
+
+    app.enableCors({
+      origin:
+        !corsOrigin || corsOrigin === '*'
+          ? true
+          : corsOrigin.split(',').map((origin) => origin.trim()),
+      methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+      credentials: true,
+    });
 
   // 5. Documentation Swagger
   const config = new DocumentBuilder()
