@@ -33,6 +33,7 @@ import { RegionsModule } from './regions/regions.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { DataExplorerModule } from './data-explorer/data-explorer.module';
 import { MarketsModule } from './markets/markets.module';
+import { PolicyModule } from './policy/policy.module';
 
 @Module({
   imports: [
@@ -74,6 +75,7 @@ import { MarketsModule } from './markets/markets.module';
     CalendarModule,
     DataExplorerModule,
     MarketsModule,
+    PolicyModule,
   ],
   controllers: [AppController],
   providers: [

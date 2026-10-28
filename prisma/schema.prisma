@@ -259,6 +259,7 @@ model Country {
 
   marketIndices   MarketIndex[]
   sovereignYields SovereignYield[]
+  centralBanks CentralBank[]
 
   @@index([region], map: "idx_countries_region")
   @@index([incomeLevel], map: "idx_countries_income")
@@ -555,6 +556,60 @@ model MarketHours {
 
   @@map("market_hours")
 }
+
+
+model CentralBank {
+  id             String    @id @default(uuid()) @db.Uuid
+  code           String    @unique @db.VarChar(20)
+  name           String    @db.VarChar(100)
+  countryCode    String?   @map("country_code") @db.VarChar(3)
+  region         String?   @db.VarChar(50)
+  currentRate    Decimal?  @map("current_rate") @db.Decimal(10, 4)
+  neutralRate    Decimal?  @map("neutral_rate") @db.Decimal(10, 4)
+  lastChangeBps  Decimal?  @map("last_change_bps") @db.Decimal(10, 2)
+  lastChangeDate DateTime? @map("last_change_date") @db.Date
+  stance         String?   @db.VarChar(50)
+  lastUpdated    DateTime  @default(now()) @map("last_updated") @db.Timestamp(6)
+
+  country Country?       @relation(fields: [countryCode], references: [code])
+  actions  PolicyAction[]
+
+  @@index([code], map: "idx_central_banks_code")
+  @@index([countryCode], map: "idx_central_banks_country")
+  @@map("central_banks")
+}
+
+model PolicyAction {
+  id             String   @id @default(uuid()) @db.Uuid
+  centralBankId  String   @map("central_bank_id") @db.Uuid
+  actionDate     DateTime @map("action_date") @db.Date
+  actionType     String   @map("action_type") @db.VarChar(50)
+  rateBefore     Decimal? @map("rate_before") @db.Decimal(10, 4)
+  rateAfter      Decimal? @map("rate_after") @db.Decimal(10, 4)
+  changeBps      Decimal? @map("change_bps") @db.Decimal(10, 2)
+  rationale      String?  @db.Text
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  centralBank CentralBank @relation(fields: [centralBankId],references: [id], onDelete: Cascade)
+
+  @@index([centralBankId, actionDate(sort: Desc)], map: "idx_policy_actions_bank")
+  @@index([actionDate(sort: Desc)], map: "idx_policy_actions_date")
+  @@map("policy_actions")
+}
+
+model GlobalPolicySummary {
+  id                  String   @id @default(uuid()) @db.Uuid
+  period              DateTime @db.Date
+  narrative            String?  @db.Text
+  cutsCount            Int?     @map("cuts_count")
+  banksFollowed        Int?     @map("banks_followed")
+  globalRateCorridor   String?  @map("global_rate_corridor") @db.VarChar(50)
+  createdAt            DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  @@index([period(sort: Desc)], map: "idx_global_policy_summary_period")
+  @@map("global_policy_summary")
+}
+
 
 
 enum RoleUser {
