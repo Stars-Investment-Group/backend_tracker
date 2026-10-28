@@ -32,6 +32,7 @@ import { GlobalKpiModule } from './global-kpi/global-kpi.module';
 import { RegionsModule } from './regions/regions.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { DataExplorerModule } from './data-explorer/data-explorer.module';
+import { MarketsModule } from './markets/markets.module';
 
 @Module({
   imports: [
@@ -72,6 +73,7 @@ import { DataExplorerModule } from './data-explorer/data-explorer.module';
     RegionsModule,
     CalendarModule,
     DataExplorerModule,
+    MarketsModule,
   ],
   controllers: [AppController],
   providers: [
