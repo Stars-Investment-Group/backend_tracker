@@ -26,6 +26,7 @@ model User {
   alerts           Alert[]
   auditLogs        AuditLog[]
   watchlists       Watchlist[]
+  reportBookmarks ReportBookmark[]
 }
 
 model AuditLog {
@@ -609,6 +610,47 @@ model GlobalPolicySummary {
   @@index([period(sort: Desc)], map: "idx_global_policy_summary_period")
   @@map("global_policy_summary")
 }
+
+
+model Report {
+  id             String           @id @default(uuid()) @db.Uuid
+  title          String           @db.VarChar(255)
+  description    String?          @db.Text
+  category       String           @db.VarChar(50)
+  frequency      String?          @db.VarChar(50)
+  readingTimeMin Int?             @map("reading_time_min")
+  pageCount      Int?             @map("page_count")
+  publishDate    DateTime         @map("publish_date") @db.Date
+  fileUrl        String?          @map("file_url") @db.VarChar(500)
+  fileSizeKb     Int?             @map("file_size_kb")
+  isFeatured     Boolean          @default(false) @map("is_featured")
+  isActive       Boolean          @default(true) @map("is_active")
+  tags           Json             @default("[]")
+  createdAt      DateTime         @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt      DateTime         @default(now()) @map("updated_at") @db.Timestamp(6)
+  bookmarks      ReportBookmark[]
+
+  @@index([category], map: "idx_reports_category")
+  @@index([publishDate(sort: Desc)], map: "idx_reports_publish_date")
+  @@index([isFeatured], map: "idx_reports_featured")
+  @@map("reports")
+}
+
+model ReportBookmark {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  reportId  String   @map("report_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  report Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, reportId])
+  @@index([userId], map: "idx_report_bookmarks_user")
+  @@index([reportId], map: "idx_report_bookmarks_report")
+  @@map("report_bookmarks")
+}
+
 
 
 
