@@ -27,6 +27,8 @@ model User {
   auditLogs        AuditLog[]
   watchlists       Watchlist[]
   reportBookmarks ReportBookmark[]
+  alertSubscriptions AlertSubscription[]
+  alertReads         AlertRead[]
 }
 
 model AuditLog {
@@ -261,6 +263,7 @@ model Country {
   marketIndices   MarketIndex[]
   sovereignYields SovereignYield[]
   centralBanks CentralBank[]
+  alertsMacro AlertMacro[]
 
   @@index([region], map: "idx_countries_region")
   @@index([incomeLevel], map: "idx_countries_income")
@@ -651,6 +654,59 @@ model ReportBookmark {
   @@map("report_bookmarks")
 }
 
+model AlertMacro {
+  id          String    @id @default(uuid()) @db.Uuid
+  title       String    @db.VarChar(255)
+  description String?   @db.Text
+  category    String    @db.VarChar(50)
+  severity    String    @db.VarChar(20)
+  countryCode String?   @map("country_code") @db.VarChar(3)
+  region      String?   @db.VarChar(50)
+  sourceModule String?  @map("source_module") @db.VarChar(50)
+  sourceId    String?   @map("source_id") @db.Uuid
+  isActive    Boolean   @default(true) @map("is_active")
+  triggeredAt DateTime  @default(now()) @map("triggered_at") @db.Timestamptz(6)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+
+  country Country? @relation(fields: [countryCode], references: [code], onDelete: SetNull)
+  reads   AlertRead[]
+
+  @@index([category], map: "idx_alerts_macro_category")
+  @@index([severity], map: "idx_alerts_macro_severity")
+  @@index([countryCode], map: "idx_alerts_macro_country")
+  @@index([triggeredAt(sort: Desc)], map: "idx_alerts_macro_triggered")
+  @@index([isActive], map: "idx_alerts_macro_active")
+  @@map("alerts_macro")
+}
+
+model AlertRead {
+  userId      String   @map("user_id") @db.Uuid
+  alertId     String   @map("alert_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user  User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  alert AlertMacro @relation(fields: [alertId], references: [id], onDelete: Cascade)
+
+  @@id([userId, alertId])
+  @@index([alertId], map: "idx_alert_reads_alert")
+  @@map("alert_reads")
+}
+
+model AlertSubscription {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  category    String?  @db.VarChar(50)
+  countryCode String?  @map("country_code") @db.VarChar(3)
+  minSeverity String?  @map("min_severity") @db.VarChar(20)
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], map: "idx_alert_subscriptions_user")
+  @@index([isActive], map: "idx_alert_subscriptions_active")
+  @@map("alert_subscriptions")
+}
 
 
 

@@ -35,6 +35,7 @@ import { DataExplorerModule } from './data-explorer/data-explorer.module';
 import { MarketsModule } from './markets/markets.module';
 import { PolicyModule } from './policy/policy.module';
 import { ReportsModule } from './reports/reports.module';
+import { AlertMacroModule } from './alert-macro/alert-macro.module';
 
 @Module({
   imports: [
@@ -78,6 +79,7 @@ import { ReportsModule } from './reports/reports.module';
     MarketsModule,
     PolicyModule,
     ReportsModule,
+    AlertMacroModule,
   ],
   controllers: [AppController],
   providers: [
